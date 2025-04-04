@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 📱 TOOLBOX FRONTEND 🎨
 
-## Getting Started
+> _L'interface neuronale qui connecte ton cerveau au monde digital_
 
-First, run the development server:
+<p align="center">
+  <img src="https://i.imgur.com/pLeOF5L.gif" width="60%" alt="Frontend Animation" />
+</p>
+
+## 🧠 INTERFACE NÉOMORPHIQUE
+
+Bienvenue dans le cockpit visuel de **TOOLBOX** - où la technologie rencontre l'art et où l'information devient poésie visuelle. Ce frontend n'est pas juste une interface, c'est une expérience sensorielle algorithmique!
+
+### 🎭 Composants clés de cette dimension parallèle :
+
+- 🌈 **Next.js App Router** - Routage quantique instantané
+- 🧪 **React + TypeScript** - Mariage parfait entre puissance et sécurité typée
+- 🔮 **Tailwind CSS** - Stylisation atomique pour manipuler l'espace-temps visuel
+- 🌙 **Mode sombre/clair** - Bascule entre les dimensions parallèles
+- 🧩 **shadcn/ui** - Arsenal de composants UI interdimensionnels
+
+## 🚀 Ouvre le portail (Commandes magiques)
 
 ```bash
+# Invoque les dépendances cosmiques
+npm install
+# (ou la formule alternative) pnpm install
+
+# Ouvre le vortex de développement
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Compile les artefacts pour le déploiement
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🧙‍♂️ Sortilèges avancés
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Analyse les écrits pour détecter les malédictions
+npm run lint
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+# Nettoie et harmonise le code comme un alchimiste
+npm run format
 
-## Learn More
+# Vérifie les types pour prévenir les paradoxes temporels
+npm run type-check
 
-To learn more about Next.js, take a look at the following resources:
+# Invocation complète pour purifier le code
+npm run check
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🌌 Architecture neuronale
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```
+frontend/
+├── 🌈 app/                # Centre névralgique de l'UI
+│   ├── layout.tsx         # Structure dimensionnelle principale
+│   ├── page.tsx           # Portail vers l'analyse système
+│   ├── theme-toggle.tsx   # Basculateur de réalités parallèles
+│   └── globals.css        # Enchantements stylisés globaux
+│
+├── 🧩 components/         # Arsenal d'artefacts visuels
+│   ├── theme-provider.tsx # Gestionnaire de réalités parallèles
+│   └── ui/                # Collection de cristaux UI
+│
+├── 🧿 lib/                # Grimoires d'utilitaires
+│   └── utils.ts           # Sortilèges et incantations diverses
+│
+├── 🧮 wailsjs/            # Pont télépathique vers le backend Go
+│   └── go/main/App.ts     # Invocations des pouvoirs Go
+│
+└── 🧰 configuration       # Grimoires de configuration
+    ├── tailwind.config.ts # Contrôleur de flux stylisé
+    ├── postcss.config.js  # Transformateur de CSS
+    └── tsconfig.json      # Barrières typographiques
+```
 
-## Deploy on Vercel
+## 🔮 Visualisations psychiques (captures)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+<p align="center">
+  <img src="https://i.imgur.com/JgzXZfO.jpg" width="45%" alt="Interface Jour" />
+  &nbsp;&nbsp;
+  <img src="https://i.imgur.com/Q8FN0tH.jpg" width="45%" alt="Interface Nuit" />
+</p>
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## 📚 Grimoires de connaissances
+
+- [Documentation Next.js](https://nextjs.org/docs) - Parchemins de sagesse Next.js
+- [Documentation Tailwind](https://tailwindcss.com/docs) - Manuscrits des styles atomiques
+- [Guide shadcn/ui](https://ui.shadcn.com) - Collection de composants réutilisables
+- [Manuel Wails JS](https://wails.io/docs/reference/runtime/intro) - Communication avec le plan Go
+
+## 👁️ Troisième œil
+
+Explore. Expérimente. Transcende les limites du design conventionnel.
+
+---
+
+<p align="center">
+  <strong>TOOLBOX FRONTEND</strong> — L'interface qui transforme l'ordinaire en extraordinaire.
+</p>
