@@ -1,0 +1,115 @@
+# Dépendances
+/node_modules
+/frontend/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Tests
+/coverage
+/frontend/coverage
+
+# Next.js
+/.next/
+/out/
+/frontend/.next/
+/frontend/out/
+.next/analyze
+
+# Production et build
+/build/bin
+/dist
+/wailsjs
+/frontend/dist
+/frontend/wailsjs
+/embedded-assets
+
+# Fichiers d'environnement
+.env*.local
+.env
+.env.development
+.env.test
+.env.production
+
+# Fichiers de logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+logs
+*.log
+
+# Fichiers de build et binaires
+build-*
+*.syso
+*.app
+*.dmg
+*.pkg
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.bak
+.cache/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Fichiers d'éditeurs
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.sublime-workspace
+*.sublime-project
+.vs/
+*.swp
+*.swo
+*~
+
+# Go
+*.test
+*.out
+go.work
+
+# Bundle analyzer
+.next/analyze 
