@@ -65,6 +65,110 @@ wails build
 
 Le trésor compilé t'attend dans le dossier `build/bin`!
 
+## 🧰 Scripts et Commandes Magiques
+
+### 🔮 Commandes Wails essentielles
+
+```bash
+# Démarre le mode développement (hot-reload inclus)
+wails dev
+
+# Compile uniquement le frontend
+wails build -frontend-only
+
+# Compile uniquement le backend
+wails build -backend-only
+
+# Crée une version release de l'application
+wails build -production
+
+# Pour les adeptes de Windows
+wails build -platform windows
+
+# Pour les fidèles de macOS
+wails build -platform darwin
+
+# Pour les disciples de Linux
+wails build -platform linux
+```
+
+### 🧙‍♂️ Gestion des dépendances frontend
+
+```bash
+# Installation des dépendances avec npm
+cd frontend && npm install
+
+# Installation avec pnpm (recommandé)
+cd frontend && pnpm install
+
+# Si tu rencontres des conflits de dépendances
+cd frontend && pnpm install --force
+
+# Pour mettre à jour les dépendances
+cd frontend && pnpm update
+```
+
+### 🔧 Debugging et dépannage
+
+```bash
+# Nettoyer le cache de développement Wails
+rm -rf frontend/dist
+rm -rf build/bin
+
+# Si le port est déjà utilisé, trouve le processus
+lsof -i :[port_number]   # Exemple: lsof -i :2024
+
+# Tue le processus qui utilise le port
+kill -9 [PID]
+
+# Vérifier les erreurs TypeScript
+cd frontend && pnpm run type-check
+
+# Lancer le linter pour trouver les problèmes
+cd frontend && pnpm run lint
+
+# Corriger automatiquement les problèmes de linting
+cd frontend && pnpm run lint:fix
+
+# Vérifier si des modifications de package.json ont été faites
+cd frontend && md5sum -c package.json.md5
+```
+
+### 🧠 Configuration et personnalisation
+
+```bash
+# Modifier le port du frontend (si 2024 est déjà utilisé)
+# Édite frontend/package.json: "dev": "next dev -p XXXX"
+# Et wails.json: "frontend:dev:serverUrl": "http://localhost:XXXX"
+
+# Configure Git hooks pour le linting avant commit
+cd frontend && pnpm run prepare
+
+# Recompile le Wailsjs (si tu changes le backend Go)
+wails generate module
+```
+
+### 🌐 Environnements spécifiques
+
+```bash
+# Variables d'environnement pour le dev
+NODE_ENV=development wails dev
+
+# Démarrage avec debug verbose
+wails dev -v -loglevel debug
+```
+
+### 🔍 Commandes de déploiement
+
+```bash
+# Créer un paquet d'installation complet
+wails build -platform windows -nsis
+wails build -platform darwin -dmg
+
+# Créer un binaire autonome
+wails build -platform linux -o toolbox
+```
+
 ## 🧪 Architecture magique
 
 ```
