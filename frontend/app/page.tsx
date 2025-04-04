@@ -1,8 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Greet } from "../wailsjs/go/main/App";
-import { OSInfo } from "./types";
+import { Terminal, Info, AlertCircle, Computer, Monitor, HardDrive } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { FaApple, FaWindows, FaLinux } from 'react-icons/fa';
+
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
 import {
   Card,
   CardContent,
@@ -10,21 +14,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
-import { Separator } from "../components/ui/separator";
-import { Skeleton } from "../components/ui/skeleton";
-import {
-  Terminal,
-  Info,
-  AlertCircle,
-  Computer,
-  Monitor,
-  HardDrive,
-} from "lucide-react";
-import { FaApple, FaWindows, FaLinux } from "react-icons/fa";
+} from '../components/ui/card';
+import { Separator } from '../components/ui/separator';
+import { Skeleton } from '../components/ui/skeleton';
+import { Greet } from '../wailsjs/go/main/App';
+
+import { OSInfo } from './types';
 
 declare global {
   interface Window {
@@ -40,13 +35,13 @@ declare global {
 }
 
 export default function Home() {
-  const [greeting, setGreeting] = useState<string>("");
+  const [greeting, setGreeting] = useState<string>('');
   const [osInfo, setOsInfo] = useState<OSInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [backendAvailable, setBackendAvailable] = useState<boolean>(false);
   const [diskInfo, setDiskInfo] = useState<{ free: string; total: string }>({
-    free: "",
-    total: "",
+    free: '',
+    total: '',
   });
   const [refreshInterval, setRefreshInterval] = useState<number | null>(null);
 
@@ -58,8 +53,8 @@ export default function Home() {
         const newOsInfo = await window.go.main.App.GetOSInfo();
         setOsInfo(newOsInfo);
         setDiskInfo({
-          free: newOsInfo.diskFree || "",
-          total: newOsInfo.diskTotal || "",
+          free: newOsInfo.diskFree || '',
+          total: newOsInfo.diskTotal || '',
         });
         setBackendAvailable(true);
       } else {
@@ -67,7 +62,7 @@ export default function Home() {
         setBackendAvailable(false);
       }
     } catch (error) {
-      console.error("Erreur lors du rafraîchissement des données:", error);
+      console.error('Erreur lors du rafraîchissement des données:', error);
       setBackendAvailable(false);
     } finally {
       setLoading(false);
@@ -77,7 +72,7 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const message = await Greet("ToolBox");
+        const message = await Greet('ToolBox');
         setGreeting(message);
 
         // Essayer d'appeler GetOSInfo directement
@@ -85,26 +80,26 @@ export default function Home() {
           window.go &&
           window.go.main &&
           window.go.main.App &&
-          typeof window.go.main.App.GetOSInfo === "function"
+          typeof window.go.main.App.GetOSInfo === 'function'
         ) {
           try {
             const osInfo = await window.go.main.App.GetOSInfo();
             setOsInfo(osInfo);
             setDiskInfo({
-              free: osInfo.diskFree || "",
-              total: osInfo.diskTotal || "",
+              free: osInfo.diskFree || '',
+              total: osInfo.diskTotal || '',
             });
             setBackendAvailable(true);
           } catch (err) {
-            console.error("Erreur l&apos;appel à GetOSInfo:", err);
+            console.error('Erreur l&apos;appel à GetOSInfo:', err);
             setBackendAvailable(false);
           }
         } else {
-          console.log("La méthode GetOSInfo n&apos;est pas disponible");
+          console.log('La méthode GetOSInfo n&apos;est pas disponible');
           setBackendAvailable(false);
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des données:", error);
+        console.error('Erreur lors de la récupération des données:', error);
       } finally {
         setLoading(false);
       }
@@ -118,14 +113,11 @@ export default function Home() {
         try {
           const osInfo = await window.go.main.App.GetOSInfo();
           setDiskInfo({
-            free: osInfo.diskFree || "",
-            total: osInfo.diskTotal || "",
+            free: osInfo.diskFree || '',
+            total: osInfo.diskTotal || '',
           });
         } catch (err) {
-          console.error(
-            "Erreur lors de la mise à jour des informations de disque:",
-            err
-          );
+          console.error('Erreur lors de la mise à jour des informations de disque:', err);
         }
       }
     }, 5000); // Mise à jour toutes les 5 secondes
@@ -143,13 +135,13 @@ export default function Home() {
   const isDetectedOS = (osName: string): boolean => {
     if (!osInfo) return false;
 
-    if (osName === "macOS" && osInfo.isMacOS) return true;
-    if (osName === "Windows" && osInfo.isWindows) return true;
+    if (osName === 'macOS' && osInfo.isMacOS) return true;
+    if (osName === 'Windows' && osInfo.isWindows) return true;
     if (
-      osName === "Linux" &&
+      osName === 'Linux' &&
       !osInfo.isMacOS &&
       !osInfo.isWindows &&
-      osInfo.name.toLowerCase().includes("linux")
+      osInfo.name.toLowerCase().includes('linux')
     )
       return true;
 
@@ -157,38 +149,34 @@ export default function Home() {
   };
 
   // Rendu d'une carte pour un système d'exploitation
-  const renderOSCard = (
-    osName: string,
-    icon: React.ReactNode,
-    description: string
-  ) => {
+  const renderOSCard = (osName: string, icon: React.ReactNode, description: string) => {
     const isDetected = isDetectedOS(osName);
 
     return (
       <Card
         className={`w-full transition-all duration-500 ${
           isDetected
-            ? "ring-2 ring-primary/40 shadow-xl scale-[1.02] relative backdrop-blur-sm bg-background/70 before:absolute before:inset-0 before:bg-gradient-to-br before:from-primary/5 before:to-transparent before:rounded-xl before:z-[-1] after:absolute after:inset-0 after:bg-gradient-to-br after:from-primary/20 after:to-transparent after:z-[-2] after:rounded-xl after:blur-lg after:opacity-70 hover:ring-primary/60 hover:scale-[1.03]"
-            : "opacity-90 hover:opacity-100 hover:shadow-lg hover:translate-y-[-4px] hover:bg-background/80 hover:scale-[1.02] transition-transform duration-300 bg-background/60 border border-primary/5"
+            ? 'ring-2 ring-primary/40 shadow-xl scale-[1.02] relative backdrop-blur-sm bg-background/70 before:absolute before:inset-0 before:bg-gradient-to-br before:from-primary/5 before:to-transparent before:rounded-xl before:z-[-1] after:absolute after:inset-0 after:bg-gradient-to-br after:from-primary/20 after:to-transparent after:z-[-2] after:rounded-xl after:blur-lg after:opacity-70 hover:ring-primary/60 hover:scale-[1.03]'
+            : 'opacity-90 hover:opacity-100 hover:shadow-lg hover:translate-y-[-4px] hover:bg-background/80 hover:scale-[1.02] transition-transform duration-300 bg-background/60 border border-primary/5'
         }`}
       >
         <CardHeader
           className={`${
             isDetected
-              ? "bg-gradient-to-r from-primary/20 to-primary/5 backdrop-blur-md"
-              : "bg-gradient-to-r from-muted/20 to-transparent"
+              ? 'bg-gradient-to-r from-primary/20 to-primary/5 backdrop-blur-md'
+              : 'bg-gradient-to-r from-muted/20 to-transparent'
           } rounded-t-xl transition-all duration-300 relative overflow-hidden ${
             isDetected
-              ? "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-primary/5 before:to-transparent before:animate-gradient"
-              : ""
+              ? 'before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-primary/5 before:to-transparent before:animate-gradient'
+              : ''
           }`}
         >
           <div className="flex items-center gap-3 relative z-10">
             <div
               className={`p-3 rounded-full ${
                 isDetected
-                  ? "bg-primary/20 text-primary shadow-lg ring-1 ring-primary/30 animate-subtle-bounce"
-                  : "bg-muted/30"
+                  ? 'bg-primary/20 text-primary shadow-lg ring-1 ring-primary/30 animate-subtle-bounce'
+                  : 'bg-muted/30'
               } transform transition-all duration-300`}
             >
               {icon}
@@ -196,26 +184,24 @@ export default function Home() {
             <div>
               <CardTitle
                 className={`${
-                  isDetected ? "text-primary font-bold text-shadow-sm" : ""
+                  isDetected ? 'text-primary font-bold text-shadow-sm' : ''
                 } font-heading`}
               >
                 {osName}
               </CardTitle>
-              {isDetected && osInfo && osName === "macOS" && (
+              {isDetected && osInfo && osName === 'macOS' && (
                 <div className="text-sm font-medium mt-1 text-primary/80 font-smooth">
                   {osInfo.version}
                 </div>
               )}
-              {isDetected && osInfo && osName !== "macOS" && (
+              {isDetected && osInfo && osName !== 'macOS' && (
                 <div className="text-sm font-medium mt-1 text-primary/80 font-smooth">
                   {osInfo.osFullName}
                 </div>
               )}
             </div>
           </div>
-          <CardDescription
-            className={`${isDetected ? "text-primary-foreground/80" : ""} mt-2`}
-          >
+          <CardDescription className={`${isDetected ? 'text-primary-foreground/80' : ''} mt-2`}>
             {description}
           </CardDescription>
         </CardHeader>
@@ -224,7 +210,7 @@ export default function Home() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Badge
-                  variant={isDetected ? "default" : "outline"}
+                  variant={isDetected ? 'default' : 'outline'}
                   className="animate-pulse shadow-sm backdrop-blur-sm bg-primary/20 font-smooth"
                 >
                   Détecté
@@ -253,31 +239,31 @@ export default function Home() {
                   Processeur (CPU)
                 </p>
                 <p className="font-medium bg-background/50 p-3 rounded-md shadow-inner backdrop-blur-sm border border-primary/10 transform hover:scale-[1.01] transition-transform font-smooth">
-                  {osInfo.cpuModel || "Non détecté"}
+                  {osInfo.cpuModel || 'Non détecté'}
                   {isDetected &&
-                    osName === "macOS" &&
+                    osName === 'macOS' &&
                     osInfo.cpuModel &&
-                    osInfo.cpuModel.includes("Apple") && (
+                    osInfo.cpuModel.includes('Apple') && (
                       <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/20 text-primary font-bold font-mono text-glow animate-pulse">
-                        {osInfo.cpuModel.includes("M1")
-                          ? "M1"
-                          : osInfo.cpuModel.includes("M2")
-                          ? "M2"
-                          : osInfo.cpuModel.includes("M3")
-                          ? "M3"
-                          : osInfo.cpuModel.includes("M4")
-                          ? "M4"
-                          : "Apple Silicon"}
+                        {osInfo.cpuModel.includes('M1')
+                          ? 'M1'
+                          : osInfo.cpuModel.includes('M2')
+                            ? 'M2'
+                            : osInfo.cpuModel.includes('M3')
+                              ? 'M3'
+                              : osInfo.cpuModel.includes('M4')
+                                ? 'M4'
+                                : 'Apple Silicon'}
                       </span>
                     )}
-                  {isDetected && osName === "Windows" && osInfo.cpuModel && (
+                  {isDetected && osName === 'Windows' && osInfo.cpuModel && (
                     <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/20 text-primary">
-                      {osInfo.cpuModel.toLowerCase().includes("intel")
-                        ? "Intel"
-                        : osInfo.cpuModel.toLowerCase().includes("amd") ||
-                          osInfo.cpuModel.toLowerCase().includes("ryzen")
-                        ? "AMD"
-                        : ""}
+                      {osInfo.cpuModel.toLowerCase().includes('intel')
+                        ? 'Intel'
+                        : osInfo.cpuModel.toLowerCase().includes('amd') ||
+                            osInfo.cpuModel.toLowerCase().includes('ryzen')
+                          ? 'AMD'
+                          : ''}
                     </span>
                   )}
                 </p>
@@ -286,17 +272,17 @@ export default function Home() {
                   Carte graphique (GPU)
                 </p>
                 <p className="font-medium bg-background/50 p-3 rounded-md shadow-inner backdrop-blur-sm border border-primary/10 transform hover:scale-[1.01] transition-transform font-smooth">
-                  {osInfo.gpuModel || "Non détecté"}
-                  {isDetected && osName === "Windows" && osInfo.gpuModel && (
+                  {osInfo.gpuModel || 'Non détecté'}
+                  {isDetected && osName === 'Windows' && osInfo.gpuModel && (
                     <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/20 text-primary">
-                      {osInfo.gpuModel.toLowerCase().includes("nvidia")
-                        ? "NVIDIA"
-                        : osInfo.gpuModel.toLowerCase().includes("amd") ||
-                          osInfo.gpuModel.toLowerCase().includes("radeon")
-                        ? "AMD"
-                        : osInfo.gpuModel.toLowerCase().includes("intel")
-                        ? "Intel"
-                        : ""}
+                      {osInfo.gpuModel.toLowerCase().includes('nvidia')
+                        ? 'NVIDIA'
+                        : osInfo.gpuModel.toLowerCase().includes('amd') ||
+                            osInfo.gpuModel.toLowerCase().includes('radeon')
+                          ? 'AMD'
+                          : osInfo.gpuModel.toLowerCase().includes('intel')
+                            ? 'Intel'
+                            : ''}
                     </span>
                   )}
                 </p>
@@ -307,7 +293,7 @@ export default function Home() {
                       Mémoire RAM
                     </p>
                     <p className="font-medium bg-background/50 p-3 rounded-md shadow-inner backdrop-blur-sm border border-primary/10 transform hover:scale-[1.01] transition-transform font-smooth flex items-center">
-                      <span>{osInfo.memoryTotal || "Non détecté"}</span>
+                      <span>{osInfo.memoryTotal || 'Non détecté'}</span>
                     </p>
                   </div>
 
@@ -321,7 +307,7 @@ export default function Home() {
                         variant="outline"
                         className="ml-auto bg-background/50 backdrop-blur-sm shadow-inner"
                       >
-                        {osInfo.arch === "arm64" ? "ARM" : "x86"}
+                        {osInfo.arch === 'arm64' ? 'ARM' : 'x86'}
                       </Badge>
                     </p>
                   </div>
@@ -333,7 +319,7 @@ export default function Home() {
                       Stockage Total
                     </p>
                     <p className="font-medium bg-background/50 p-3 rounded-md shadow-inner backdrop-blur-sm border border-primary/10 transform hover:scale-[1.01] transition-transform font-smooth flex items-center">
-                      <span>{osInfo.diskTotal || "Non détecté"}</span>
+                      <span>{osInfo.diskTotal || 'Non détecté'}</span>
                     </p>
                   </div>
 
@@ -342,18 +328,13 @@ export default function Home() {
                       Stockage Libre
                     </p>
                     <p className="font-medium bg-background/50 p-3 rounded-md shadow-inner backdrop-blur-sm border border-primary/10 transform hover:scale-[1.01] transition-transform font-smooth flex items-center">
-                      <span>{osInfo.diskFree || "Non détecté"}</span>
+                      <span>{osInfo.diskFree || 'Non détecté'}</span>
                       {osInfo.diskFree && osInfo.diskTotal && (
                         <Badge
                           variant="outline"
                           className="ml-auto bg-background/50 backdrop-blur-sm shadow-inner"
                         >
-                          Utilisé:{" "}
-                          {calculateUsedPercentage(
-                            osInfo.diskFree,
-                            osInfo.diskTotal
-                          )}
-                          %
+                          Utilisé: {calculateUsedPercentage(osInfo.diskFree, osInfo.diskTotal)}%
                         </Badge>
                       )}
                     </p>
@@ -377,20 +358,14 @@ export default function Home() {
   const calculateUsedPercentage = (free: string, total: string): number => {
     try {
       // Extraire les valeurs numériques et convertir en Go
-      const freeValue = parseFloat(
-        free.replace(/[^0-9,.]/g, "").replace(",", ".")
-      );
-      const totalValue = parseFloat(
-        total.replace(/[^0-9,.]/g, "").replace(",", ".")
-      );
+      const freeValue = parseFloat(free.replace(/[^0-9,.]/g, '').replace(',', '.'));
+      const totalValue = parseFloat(total.replace(/[^0-9,.]/g, '').replace(',', '.'));
 
       if (isNaN(freeValue) || isNaN(totalValue) || totalValue === 0) {
         return 0;
       }
 
-      const usedPercentage = Math.round(
-        ((totalValue - freeValue) / totalValue) * 100
-      );
+      const usedPercentage = Math.round(((totalValue - freeValue) / totalValue) * 100);
       return usedPercentage;
     } catch (e) {
       return 0;
@@ -408,9 +383,7 @@ export default function Home() {
                 <Terminal className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-base">
-                  Bienvenue dans ToolBox
-                </h3>
+                <h3 className="font-semibold text-base">Bienvenue dans ToolBox</h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   Aperçu des informations système
                 </p>
@@ -433,7 +406,7 @@ export default function Home() {
         ) : backendAvailable ? (
           <div className="space-y-6">
             {/* OS Détecté - Design moderne */}
-            {isDetectedOS("macOS") && (
+            {isDetectedOS('macOS') && (
               <div className="relative overflow-hidden rounded-2xl shadow-lg group hover:shadow-xl transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-80"></div>
                 <div className="absolute -bottom-4 -right-4 w-40 h-40 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-2xl"></div>
@@ -445,9 +418,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="font-bold text-base">macOS</h3>
-                      {osInfo && (
-                        <p className="text-sm opacity-80">{osInfo.version}</p>
-                      )}
+                      {osInfo && <p className="text-sm opacity-80">{osInfo.version}</p>}
                     </div>
                   </div>
 
@@ -459,7 +430,7 @@ export default function Home() {
                             <p className="text-xs font-medium">Puce</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm truncate">
-                            {osInfo.cpuModel || "Non détecté"}
+                            {osInfo.cpuModel || 'Non détecté'}
                           </p>
                         </div>
                         <div className="rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] group">
@@ -467,7 +438,7 @@ export default function Home() {
                             <p className="text-xs font-medium">RAM</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm">
-                            {osInfo.memoryTotal || "Non détecté"}
+                            {osInfo.memoryTotal || 'Non détecté'}
                           </p>
                         </div>
                         <div className="rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] group">
@@ -475,7 +446,7 @@ export default function Home() {
                             <p className="text-xs font-medium">Stockage</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm truncate">
-                            {osInfo.diskFree || "?"}/{osInfo.diskTotal || "?"}
+                            {osInfo.diskFree || '?'}/{osInfo.diskTotal || '?'}
                           </p>
                         </div>
                       </>
@@ -485,7 +456,7 @@ export default function Home() {
               </div>
             )}
 
-            {isDetectedOS("Windows") && (
+            {isDetectedOS('Windows') && (
               <div className="relative overflow-hidden rounded-2xl shadow-lg group hover:shadow-xl transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-80"></div>
                 <div className="absolute -bottom-4 -right-4 w-40 h-40 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-2xl"></div>
@@ -497,11 +468,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="font-bold text-base">Windows</h3>
-                      {osInfo && (
-                        <p className="text-sm opacity-80">
-                          {osInfo.osFullName}
-                        </p>
-                      )}
+                      {osInfo && <p className="text-sm opacity-80">{osInfo.osFullName}</p>}
                     </div>
                   </div>
 
@@ -513,7 +480,7 @@ export default function Home() {
                             <p className="text-xs font-medium">CPU</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm truncate">
-                            {osInfo.cpuModel || "Non détecté"}
+                            {osInfo.cpuModel || 'Non détecté'}
                           </p>
                         </div>
                         <div className="rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02]">
@@ -521,7 +488,7 @@ export default function Home() {
                             <p className="text-xs font-medium">GPU</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm truncate">
-                            {osInfo.gpuModel || "Non détecté"}
+                            {osInfo.gpuModel || 'Non détecté'}
                           </p>
                         </div>
                         <div className="rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02]">
@@ -529,7 +496,7 @@ export default function Home() {
                             <p className="text-xs font-medium">RAM</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm">
-                            {osInfo.memoryTotal || "Non détecté"}
+                            {osInfo.memoryTotal || 'Non détecté'}
                           </p>
                         </div>
                         <div className="rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02]">
@@ -537,7 +504,7 @@ export default function Home() {
                             <p className="text-xs font-medium">Stockage</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm truncate">
-                            {osInfo.diskFree || "?"}/{osInfo.diskTotal || "?"}
+                            {osInfo.diskFree || '?'}/{osInfo.diskTotal || '?'}
                           </p>
                         </div>
                       </>
@@ -547,7 +514,7 @@ export default function Home() {
               </div>
             )}
 
-            {isDetectedOS("Linux") && (
+            {isDetectedOS('Linux') && (
               <div className="relative overflow-hidden rounded-2xl shadow-lg group hover:shadow-xl transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-80"></div>
                 <div className="absolute -bottom-4 -right-4 w-40 h-40 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-2xl"></div>
@@ -559,11 +526,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="font-bold text-base">Linux</h3>
-                      {osInfo && (
-                        <p className="text-sm opacity-80">
-                          {osInfo.osFullName}
-                        </p>
-                      )}
+                      {osInfo && <p className="text-sm opacity-80">{osInfo.osFullName}</p>}
                     </div>
                   </div>
 
@@ -575,7 +538,7 @@ export default function Home() {
                             <p className="text-xs font-medium">CPU</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm truncate">
-                            {osInfo.cpuModel || "Non détecté"}
+                            {osInfo.cpuModel || 'Non détecté'}
                           </p>
                         </div>
                         <div className="rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02]">
@@ -583,7 +546,7 @@ export default function Home() {
                             <p className="text-xs font-medium">GPU</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm truncate">
-                            {osInfo.gpuModel || "Non détecté"}
+                            {osInfo.gpuModel || 'Non détecté'}
                           </p>
                         </div>
                         <div className="rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02]">
@@ -591,7 +554,7 @@ export default function Home() {
                             <p className="text-xs font-medium">RAM</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm">
-                            {osInfo.memoryTotal || "Non détecté"}
+                            {osInfo.memoryTotal || 'Non détecté'}
                           </p>
                         </div>
                         <div className="rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02]">
@@ -599,7 +562,7 @@ export default function Home() {
                             <p className="text-xs font-medium">Stockage</p>
                           </div>
                           <p className="px-3 py-2 font-medium text-sm truncate">
-                            {osInfo.diskFree || "?"}/{osInfo.diskTotal || "?"}
+                            {osInfo.diskFree || '?'}/{osInfo.diskTotal || '?'}
                           </p>
                         </div>
                       </>
@@ -626,58 +589,43 @@ export default function Home() {
                 {osInfo && (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="space-y-2 transform transition-all duration-500 hover:translate-y-[-2px] hover:scale-[1.02]">
-                      <p className="text-xs opacity-70 font-medium ml-1">
-                        Système
-                      </p>
+                      <p className="text-xs opacity-70 font-medium ml-1">Système</p>
                       <div className="rounded-xl p-3 bg-gradient-to-br from-background/85 via-background/80 via-background/75 to-background/65 shadow-md backdrop-blur-sm border border-primary/10 relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/4 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity duration-700 ease-in-out">
                         <div className="absolute inset-0 bg-noise opacity-8 mix-blend-soft-light"></div>
                         <p className="font-medium text-sm truncate relative z-10">
-                          {osInfo.osFullName ||
-                            `${osInfo.name} ${osInfo.version}`}
+                          {osInfo.osFullName || `${osInfo.name} ${osInfo.version}`}
                         </p>
                       </div>
                     </div>
                     <div className="space-y-2 transform transition-all duration-500 hover:translate-y-[-2px] hover:scale-[1.02]">
-                      <p className="text-xs opacity-70 font-medium ml-1">
-                        Architecture
-                      </p>
+                      <p className="text-xs opacity-70 font-medium ml-1">Architecture</p>
                       <div className="rounded-xl p-3 bg-gradient-to-br from-background/85 via-background/80 via-background/75 to-background/65 shadow-md backdrop-blur-sm border border-primary/10 flex items-center justify-between relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/4 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity duration-700 ease-in-out">
                         <div className="absolute inset-0 bg-noise opacity-8 mix-blend-soft-light"></div>
-                        <p className="font-medium text-sm relative z-10">
-                          {osInfo.arch}
-                        </p>
+                        <p className="font-medium text-sm relative z-10">{osInfo.arch}</p>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-primary/25 via-primary/22 via-primary/20 via-primary/18 to-primary/15 border border-primary/30 shadow-inner relative z-10 backdrop-blur-sm">
-                          {osInfo.arch === "arm64" ? "ARM" : "x86"}
+                          {osInfo.arch === 'arm64' ? 'ARM' : 'x86'}
                         </span>
                       </div>
                     </div>
                     <div className="space-y-2 transform transition-all duration-500 hover:translate-y-[-2px] hover:scale-[1.02]">
-                      <p className="text-xs opacity-70 font-medium ml-1">
-                        Stockage Total
-                      </p>
+                      <p className="text-xs opacity-70 font-medium ml-1">Stockage Total</p>
                       <div className="rounded-xl p-3 bg-gradient-to-br from-background/85 via-background/80 via-background/75 to-background/65 shadow-md backdrop-blur-sm border border-primary/10 relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/4 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity duration-700 ease-in-out">
                         <div className="absolute inset-0 bg-noise opacity-8 mix-blend-soft-light"></div>
                         <p className="font-medium text-sm relative z-10">
-                          {osInfo.diskTotal || "Non détecté"}
+                          {osInfo.diskTotal || 'Non détecté'}
                         </p>
                       </div>
                     </div>
                     <div className="space-y-2 transform transition-all duration-500 hover:translate-y-[-2px] hover:scale-[1.02]">
-                      <p className="text-xs opacity-70 font-medium ml-1">
-                        Utilisé
-                      </p>
+                      <p className="text-xs opacity-70 font-medium ml-1">Utilisé</p>
                       <div className="rounded-xl p-3 bg-gradient-to-br from-background/85 via-background/80 via-background/75 to-background/65 shadow-md backdrop-blur-sm border border-primary/10 flex items-center justify-between relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/4 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity duration-700 ease-in-out">
                         <div className="absolute inset-0 bg-noise opacity-8 mix-blend-soft-light"></div>
                         <p className="font-medium text-sm relative z-10">
-                          {osInfo.diskFree || "?"}
+                          {osInfo.diskFree || '?'}
                         </p>
                         {osInfo.diskFree && osInfo.diskTotal && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-primary/25 via-primary/22 via-primary/20 via-primary/18 to-primary/15 border border-primary/30 shadow-inner relative z-10 backdrop-blur-sm">
-                            {calculateUsedPercentage(
-                              osInfo.diskFree,
-                              osInfo.diskTotal
-                            )}
-                            %
+                            {calculateUsedPercentage(osInfo.diskFree, osInfo.diskTotal)}%
                           </span>
                         )}
                       </div>
@@ -689,7 +637,7 @@ export default function Home() {
 
             {/* Autres OS en version épurée */}
             <div className="flex gap-3">
-              {!isDetectedOS("macOS") && (
+              {!isDetectedOS('macOS') && (
                 <div className="flex-1 relative overflow-hidden rounded-2xl group transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
                   <div className="absolute inset-0 bg-gradient-to-br from-background/90 to-background/70 backdrop-blur-sm"></div>
                   <div className="relative p-4 flex flex-col items-center justify-center gap-2 z-10">
@@ -700,7 +648,7 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              {!isDetectedOS("Windows") && (
+              {!isDetectedOS('Windows') && (
                 <div className="flex-1 relative overflow-hidden rounded-2xl group transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
                   <div className="absolute inset-0 bg-gradient-to-br from-background/90 to-background/70 backdrop-blur-sm"></div>
                   <div className="relative p-4 flex flex-col items-center justify-center gap-2 z-10">
@@ -711,7 +659,7 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              {!isDetectedOS("Linux") && (
+              {!isDetectedOS('Linux') && (
                 <div className="flex-1 relative overflow-hidden rounded-2xl group transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
                   <div className="absolute inset-0 bg-gradient-to-br from-background/90 to-background/70 backdrop-blur-sm"></div>
                   <div className="relative p-4 flex flex-col items-center justify-center gap-2 z-10">
@@ -732,12 +680,8 @@ export default function Home() {
                 <AlertCircle className="h-5 w-5 text-destructive" />
               </div>
               <div>
-                <h3 className="font-semibold text-base text-destructive">
-                  Erreur de détection
-                </h3>
-                <p className="text-sm mt-1">
-                  La fonction GetOSInfo n&apos;est pas disponible.
-                </p>
+                <h3 className="font-semibold text-base text-destructive">Erreur de détection</h3>
+                <p className="text-sm mt-1">La fonction GetOSInfo n&apos;est pas disponible.</p>
                 <p className="text-sm mt-1">Redémarrez avec `wails dev`.</p>
               </div>
             </div>

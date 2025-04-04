@@ -1,21 +1,19 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { ThemeProvider } from "../components/theme-provider";
-import { ThemeToggle } from "./theme-toggle";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 
-const inter = Inter({ subsets: ["latin"] });
+import './globals.css';
+import { ThemeProvider } from '../components/theme-provider';
+
+import { ThemeToggle } from './theme-toggle';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "ToolBox - Détection OS",
+  title: 'ToolBox - Détection OS',
   description: "Application de détection de système d'exploitation",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={inter.className}>
