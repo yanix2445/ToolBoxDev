@@ -1,10 +1,18 @@
 'use client';
 
+<<<<<<< Updated upstream
 import { useEffect, useState } from 'react';
 
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
+=======
+import { useEffect, useState } from "react";
+
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+>>>>>>> Stashed changes
 import {
   Card,
   CardContent,
@@ -12,6 +20,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+<<<<<<< Updated upstream
 } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { Skeleton } from '../components/ui/skeleton';
@@ -20,6 +29,22 @@ import { Greet } from '../wailsjs/wailsjs/go/main/App';
 import { OSInfo, AppCategories, AppIconMap, AppDescriptions, AppInstallCommand } from './types';
 
 import { FaApple, FaWindows, FaLinux } from 'react-icons/fa';
+=======
+} from "../components/ui/card";
+import { Separator } from "../components/ui/separator";
+import { Skeleton } from "../components/ui/skeleton";
+
+import { Greet } from "../wailsjs/wailsjs/go/main/App";
+import {
+  OSInfo,
+  AppCategories,
+  AppIconMap,
+  AppDescriptions,
+  AppInstallCommand,
+} from "./types";
+
+import { FaApple, FaWindows, FaLinux } from "react-icons/fa";
+>>>>>>> Stashed changes
 import {
   Terminal,
   Info,
@@ -42,7 +67,11 @@ import {
   X,
   ExternalLink,
   Play,
+<<<<<<< Updated upstream
 } from 'lucide-react';
+=======
+} from "lucide-react";
+>>>>>>> Stashed changes
 
 declare global {
   interface Window {
@@ -70,10 +99,17 @@ export default function Home() {
     total: '',
   });
   const [refreshInterval, setRefreshInterval] = useState<number | null>(null);
+<<<<<<< Updated upstream
   const [installerStatus, setInstallerStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
     'idle'
   );
   const [installerMessage, setInstallerMessage] = useState<string>('');
+=======
+  const [installerStatus, setInstallerStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [installerMessage, setInstallerMessage] = useState<string>("");
+>>>>>>> Stashed changes
   const [availableApps, setAvailableApps] = useState<string[]>([]);
   const [selectedApps, setSelectedApps] = useState<string[]>([]);
   const [appCommands, setAppCommands] = useState<AppInstallCommand[]>([]);
@@ -105,25 +141,45 @@ export default function Home() {
 
   // Fonction pour installer un gestionnaire de paquets selon l'OS
   const installPackageManager = async () => {
+<<<<<<< Updated upstream
     setInstallerStatus('loading');
+=======
+    setInstallerStatus("loading");
+>>>>>>> Stashed changes
     setInstallerMessage("Préparation de l'installation...");
 
     try {
       if (!osInfo) {
+<<<<<<< Updated upstream
         throw new Error('Informations système non disponibles');
+=======
+        throw new Error("Informations système non disponibles");
+>>>>>>> Stashed changes
       }
 
       if (window.go?.main?.App?.InstallPackageManager) {
         const result = await window.go.main.App.InstallPackageManager();
         setInstallerMessage(result);
+<<<<<<< Updated upstream
         setInstallerStatus('success');
       } else {
         throw new Error("La méthode InstallPackageManager n'est pas disponible");
+=======
+        setInstallerStatus("success");
+      } else {
+        throw new Error(
+          "La méthode InstallPackageManager n'est pas disponible"
+        );
+>>>>>>> Stashed changes
       }
     } catch (error) {
       console.error("Erreur lors de l'installation:", error);
       setInstallerMessage("Une erreur s'est produite pendant l'installation.");
+<<<<<<< Updated upstream
       setInstallerStatus('error');
+=======
+      setInstallerStatus("error");
+>>>>>>> Stashed changes
     }
   };
 
@@ -135,14 +191,25 @@ export default function Home() {
         setAvailableApps(apps);
       }
     } catch (error) {
+<<<<<<< Updated upstream
       console.error('Erreur lors du chargement des applications disponibles:', error);
+=======
+      console.error(
+        "Erreur lors du chargement des applications disponibles:",
+        error
+      );
+>>>>>>> Stashed changes
     }
   };
 
   // Fonction pour basculer la sélection d'une application
   const toggleAppSelection = (appName: string) => {
     if (selectedApps.includes(appName)) {
+<<<<<<< Updated upstream
       setSelectedApps(selectedApps.filter(app => app !== appName));
+=======
+      setSelectedApps(selectedApps.filter((app) => app !== appName));
+>>>>>>> Stashed changes
     } else {
       setSelectedApps([...selectedApps, appName]);
     }
@@ -158,24 +225,44 @@ export default function Home() {
     try {
       for (const appName of selectedApps) {
         try {
+<<<<<<< Updated upstream
           const command = await window.go.main.App.GenerateInstallCommand(appName);
+=======
+          const command =
+            await window.go.main.App.GenerateInstallCommand(appName);
+>>>>>>> Stashed changes
           const category = getCategoryForApp(appName);
 
           commands.push({
             appName,
             command,
+<<<<<<< Updated upstream
             icon: AppIconMap[appName] || 'package',
+=======
+            icon: AppIconMap[appName] || "package",
+>>>>>>> Stashed changes
             category,
             description: AppDescriptions[appName] || appName,
           });
         } catch (error) {
+<<<<<<< Updated upstream
           console.error(`Erreur lors de la génération de la commande pour ${appName}:`, error);
+=======
+          console.error(
+            `Erreur lors de la génération de la commande pour ${appName}:`,
+            error
+          );
+>>>>>>> Stashed changes
         }
       }
 
       setAppCommands(commands);
     } catch (error) {
+<<<<<<< Updated upstream
       console.error('Erreur lors de la génération des commandes:', error);
+=======
+      console.error("Erreur lors de la génération des commandes:", error);
+>>>>>>> Stashed changes
     } finally {
       setAppCommandsLoading(false);
     }
@@ -186,10 +273,17 @@ export default function Home() {
     navigator.clipboard
       .writeText(command)
       .then(() => {
+<<<<<<< Updated upstream
         console.log('Commande copiée dans le presse-papiers');
       })
       .catch(err => {
         console.error('Erreur lors de la copie de la commande:', err);
+=======
+        console.log("Commande copiée dans le presse-papiers");
+      })
+      .catch((err) => {
+        console.error("Erreur lors de la copie de la commande:", err);
+>>>>>>> Stashed changes
       });
   };
 
@@ -200,12 +294,17 @@ export default function Home() {
         return category.name;
       }
     }
+<<<<<<< Updated upstream
     return 'Autre';
+=======
+    return "Autre";
+>>>>>>> Stashed changes
   };
 
   // Fonction pour obtenir l'icône de catégorie
   const getCategoryIcon = (categoryName: string) => {
     switch (categoryName) {
+<<<<<<< Updated upstream
       case 'Développement':
         return <Code className="h-4 w-4" />;
       case 'Navigateurs':
@@ -215,6 +314,17 @@ export default function Home() {
       case 'Productivité':
         return <Zap className="h-4 w-4" />;
       case 'Serveurs':
+=======
+      case "Développement":
+        return <Code className="h-4 w-4" />;
+      case "Navigateurs":
+        return <Globe className="h-4 w-4" />;
+      case "Utilitaires":
+        return <Tool className="h-4 w-4" />;
+      case "Productivité":
+        return <Zap className="h-4 w-4" />;
+      case "Serveurs":
+>>>>>>> Stashed changes
         return <Server className="h-4 w-4" />;
       default:
         return <Package className="h-4 w-4" />;
@@ -224,6 +334,7 @@ export default function Home() {
   // Fonction pour obtenir l'icône d'application
   const getAppIcon = (iconName: string) => {
     switch (iconName) {
+<<<<<<< Updated upstream
       case 'git-branch':
         return <GitBranch className="h-4 w-4" />;
       case 'nodejs':
@@ -251,6 +362,35 @@ export default function Home() {
       case 'pen-tool':
         return <Code className="h-4 w-4" />;
       case 'package':
+=======
+      case "git-branch":
+        return <GitBranch className="h-4 w-4" />;
+      case "nodejs":
+        return <Code className="h-4 w-4" />;
+      case "python":
+        return <Code className="h-4 w-4" />;
+      case "code":
+        return <Code className="h-4 w-4" />;
+      case "docker":
+        return <Layers className="h-4 w-4" />;
+      case "chrome":
+        return <Globe className="h-4 w-4" />;
+      case "firefox":
+        return <Globe className="h-4 w-4" />;
+      case "terminal":
+        return <Terminal className="h-4 w-4" />;
+      case "terminal-square":
+        return <Terminal className="h-4 w-4" />;
+      case "linux":
+        return <Terminal className="h-4 w-4" />;
+      case "search":
+        return <Zap className="h-4 w-4" />;
+      case "server":
+        return <Server className="h-4 w-4" />;
+      case "pen-tool":
+        return <Code className="h-4 w-4" />;
+      case "package":
+>>>>>>> Stashed changes
         return <Package className="h-4 w-4" />;
       default:
         return <Package className="h-4 w-4" />;
@@ -441,6 +581,7 @@ export default function Home() {
                     osInfo.cpuModel &&
                     osInfo.cpuModel.includes('Apple') && (
                       <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/20 text-primary font-bold font-mono text-glow animate-pulse">
+<<<<<<< Updated upstream
                         {osInfo.cpuModel.includes('M1')
                           ? 'M1'
                           : osInfo.cpuModel.includes('M2')
@@ -450,16 +591,36 @@ export default function Home() {
                               : osInfo.cpuModel.includes('M4')
                                 ? 'M4'
                                 : 'Apple Silicon'}
+=======
+                        {osInfo.cpuModel.includes("M1")
+                          ? "M1"
+                          : osInfo.cpuModel.includes("M2")
+                            ? "M2"
+                            : osInfo.cpuModel.includes("M3")
+                              ? "M3"
+                              : osInfo.cpuModel.includes("M4")
+                                ? "M4"
+                                : "Apple Silicon"}
+>>>>>>> Stashed changes
                       </span>
                     )}
                   {isDetected && osName === 'Windows' && osInfo.cpuModel && (
                     <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/20 text-primary">
+<<<<<<< Updated upstream
                       {osInfo.cpuModel.toLowerCase().includes('intel')
                         ? 'Intel'
                         : osInfo.cpuModel.toLowerCase().includes('amd') ||
                             osInfo.cpuModel.toLowerCase().includes('ryzen')
                           ? 'AMD'
                           : ''}
+=======
+                      {osInfo.cpuModel.toLowerCase().includes("intel")
+                        ? "Intel"
+                        : osInfo.cpuModel.toLowerCase().includes("amd") ||
+                            osInfo.cpuModel.toLowerCase().includes("ryzen")
+                          ? "AMD"
+                          : ""}
+>>>>>>> Stashed changes
                     </span>
                   )}
                 </p>
@@ -471,6 +632,7 @@ export default function Home() {
                   {osInfo.gpuModel || 'Non détecté'}
                   {isDetected && osName === 'Windows' && osInfo.gpuModel && (
                     <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/20 text-primary">
+<<<<<<< Updated upstream
                       {osInfo.gpuModel.toLowerCase().includes('nvidia')
                         ? 'NVIDIA'
                         : osInfo.gpuModel.toLowerCase().includes('amd') ||
@@ -479,6 +641,16 @@ export default function Home() {
                           : osInfo.gpuModel.toLowerCase().includes('intel')
                             ? 'Intel'
                             : ''}
+=======
+                      {osInfo.gpuModel.toLowerCase().includes("nvidia")
+                        ? "NVIDIA"
+                        : osInfo.gpuModel.toLowerCase().includes("amd") ||
+                            osInfo.gpuModel.toLowerCase().includes("radeon")
+                          ? "AMD"
+                          : osInfo.gpuModel.toLowerCase().includes("intel")
+                            ? "Intel"
+                            : ""}
+>>>>>>> Stashed changes
                     </span>
                   )}
                 </p>
@@ -654,7 +826,11 @@ export default function Home() {
               </div>
             )}
 
+<<<<<<< Updated upstream
             {isDetectedOS('Windows') && (
+=======
+            {isDetectedOS("Windows") && (
+>>>>>>> Stashed changes
               <div className="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-background/95 via-background/90 to-background/85 backdrop-blur-none group hover:shadow-lg transition-all duration-700 transform hover:scale-[1.01] hover:translate-y-[-2px] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-40 before:z-[-1]">
                 <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
                 <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-30 transition-opacity duration-700 group-hover:opacity-40"></div>
@@ -714,7 +890,11 @@ export default function Home() {
               </div>
             )}
 
+<<<<<<< Updated upstream
             {isDetectedOS('Linux') && (
+=======
+            {isDetectedOS("Linux") && (
+>>>>>>> Stashed changes
               <div className="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-background/95 via-background/90 to-background/85 backdrop-blur-none group hover:shadow-lg transition-all duration-700 transform hover:scale-[1.01] hover:translate-y-[-2px] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-40 before:z-[-1]">
                 <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
                 <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-30 transition-opacity duration-700 group-hover:opacity-40"></div>
@@ -784,7 +964,13 @@ export default function Home() {
                   <Monitor className="h-6 w-6 text-primary" />
                   <div className="reflective-effect"></div>
                 </div>
+<<<<<<< Updated upstream
                 <h2 className="text-primary font-bold text-lg font-heading">Système</h2>
+=======
+                <h2 className="text-primary font-bold text-lg font-heading">
+                  Système
+                </h2>
+>>>>>>> Stashed changes
               </div>
               <div className="p-4 relative z-10 bg-gradient-to-b from-transparent via-background/10 via-background/20 via-background/30 to-background/40">
                 {osInfo && (
@@ -856,16 +1042,24 @@ export default function Home() {
                     <div>
                       <p className="text-sm text-muted-foreground mb-3">
                         {osInfo.isMacOS
+<<<<<<< Updated upstream
                           ? 'Installez Homebrew, le gestionnaire de paquets pour macOS.'
                           : osInfo.isWindows
                             ? 'Installez Winget, le gestionnaire de paquets pour Windows.'
                             : 'Utilisez le gestionnaire de paquets pour votre distribution Linux.'}
+=======
+                          ? "Installez Homebrew, le gestionnaire de paquets pour macOS."
+                          : osInfo.isWindows
+                            ? "Installez Winget, le gestionnaire de paquets pour Windows."
+                            : "Utilisez le gestionnaire de paquets pour votre distribution Linux."}
+>>>>>>> Stashed changes
                       </p>
                       <div className="rounded-xl p-4 bg-gradient-to-br from-background/85 to-background/65 shadow-md backdrop-blur-sm border border-primary/10 overflow-hidden">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                           <div className="space-y-2">
                             <h3 className="font-semibold text-primary">
                               {osInfo.isMacOS
+<<<<<<< Updated upstream
                                 ? 'Homebrew'
                                 : osInfo.isWindows
                                   ? 'Windows Package Manager (winget)'
@@ -889,15 +1083,49 @@ export default function Home() {
                                 }`}
                               >
                                 <p className="text-sm font-medium">{installerMessage}</p>
+=======
+                                ? "Homebrew"
+                                : osInfo.isWindows
+                                  ? "Windows Package Manager (winget)"
+                                  : "Gestionnaire de paquets Linux"}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {osInfo.isMacOS
+                                ? "Le gestionnaire de paquets manquant pour macOS"
+                                : osInfo.isWindows
+                                  ? "Le gestionnaire de paquets officiel pour Windows"
+                                  : "Mettez à jour vos dépôts et paquets"}
+                            </p>
+                            {installerStatus !== "idle" && (
+                              <div
+                                className={`mt-2 p-3 rounded-lg ${
+                                  installerStatus === "error"
+                                    ? "bg-destructive/10 text-destructive"
+                                    : installerStatus === "success"
+                                      ? "bg-green-500/10 text-green-500"
+                                      : "bg-primary/10 text-primary animate-pulse"
+                                }`}
+                              >
+                                <p className="text-sm font-medium">
+                                  {installerMessage}
+                                </p>
+>>>>>>> Stashed changes
                               </div>
                             )}
                           </div>
                           <Button
                             onClick={installPackageManager}
+<<<<<<< Updated upstream
                             disabled={installerStatus === 'loading'}
                             className="h-9 px-4 rounded-xl bg-primary/80 hover:bg-primary/90 backdrop-blur-sm shadow-md hover:shadow transform transition-all duration-300 hover:scale-[1.02] relative overflow-hidden group"
                           >
                             {installerStatus === 'loading' ? (
+=======
+                            disabled={installerStatus === "loading"}
+                            className="h-9 px-4 rounded-xl bg-primary/80 hover:bg-primary/90 backdrop-blur-sm shadow-md hover:shadow transform transition-all duration-300 hover:scale-[1.02] relative overflow-hidden group"
+                          >
+                            {installerStatus === "loading" ? (
+>>>>>>> Stashed changes
                               <>
                                 <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                                 Installation...
@@ -908,9 +1136,15 @@ export default function Home() {
                                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 <Download className="h-4 w-4 mr-2 relative z-10" />
                                 <span className="relative z-10">
+<<<<<<< Updated upstream
                                   {installerStatus === 'success'
                                     ? 'Instructions affichées'
                                     : 'Installer'}
+=======
+                                  {installerStatus === "success"
+                                    ? "Instructions affichées"
+                                    : "Installer"}
+>>>>>>> Stashed changes
                                 </span>
                               </>
                             )}
@@ -942,14 +1176,30 @@ export default function Home() {
                   {osInfo && (
                     <div>
                       <p className="text-sm text-muted-foreground mb-3">
+<<<<<<< Updated upstream
                         Sélectionnez les applications que vous souhaitez installer sur votre système{' '}
                         {osInfo.isMacOS ? 'macOS' : osInfo.isWindows ? 'Windows' : 'Linux'}.
+=======
+                        Sélectionnez les applications que vous souhaitez
+                        installer sur votre système{" "}
+                        {osInfo.isMacOS
+                          ? "macOS"
+                          : osInfo.isWindows
+                            ? "Windows"
+                            : "Linux"}
+                        .
+>>>>>>> Stashed changes
                       </p>
 
                       {/* Sélection d'applications par catégorie */}
                       <div className="space-y-6">
+<<<<<<< Updated upstream
                         {AppCategories.map(category => {
                           const filteredApps = category.apps.filter(app =>
+=======
+                        {AppCategories.map((category) => {
+                          const filteredApps = category.apps.filter((app) =>
+>>>>>>> Stashed changes
                             availableApps.includes(app)
                           );
                           if (filteredApps.length === 0) return null;
@@ -958,6 +1208,7 @@ export default function Home() {
                             <div key={category.name} className="space-y-2">
                               <div className="flex items-center gap-2">
                                 {getCategoryIcon(category.name)}
+<<<<<<< Updated upstream
                                 <h3 className="text-sm font-semibold">{category.name}</h3>
                               </div>
                               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -975,6 +1226,33 @@ export default function Home() {
                                   >
                                     {getAppIcon(AppIconMap[app] || 'package')}
                                     <span className="flex-1 truncate">{app}</span>
+=======
+                                <h3 className="text-sm font-semibold">
+                                  {category.name}
+                                </h3>
+                              </div>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                {filteredApps.map((app) => (
+                                  <Button
+                                    key={app}
+                                    variant={
+                                      selectedApps.includes(app)
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    size="sm"
+                                    className={`h-auto py-2 px-3 justify-start gap-2 text-left ${
+                                      selectedApps.includes(app)
+                                        ? "bg-primary/20 text-primary border-primary/30"
+                                        : "hover:bg-primary/10 hover:text-primary/90"
+                                    }`}
+                                    onClick={() => toggleAppSelection(app)}
+                                  >
+                                    {getAppIcon(AppIconMap[app] || "package")}
+                                    <span className="flex-1 truncate">
+                                      {app}
+                                    </span>
+>>>>>>> Stashed changes
                                     {selectedApps.includes(app) && (
                                       <Check className="h-3 w-3 ml-1 flex-shrink-0" />
                                     )}
@@ -990,10 +1268,20 @@ export default function Home() {
                       <div className="mt-4 flex justify-between items-center">
                         <div>
                           {selectedApps.length > 0 && (
+<<<<<<< Updated upstream
                             <Badge variant="outline" className="bg-primary/10 text-primary">
                               {selectedApps.length} application
                               {selectedApps.length > 1 ? 's' : ''} sélectionnée
                               {selectedApps.length > 1 ? 's' : ''}
+=======
+                            <Badge
+                              variant="outline"
+                              className="bg-primary/10 text-primary"
+                            >
+                              {selectedApps.length} application
+                              {selectedApps.length > 1 ? "s" : ""} sélectionnée
+                              {selectedApps.length > 1 ? "s" : ""}
+>>>>>>> Stashed changes
                             </Badge>
                           )}
                         </div>
@@ -1011,7 +1299,13 @@ export default function Home() {
                           )}
                           <Button
                             onClick={generateInstallCommands}
+<<<<<<< Updated upstream
                             disabled={selectedApps.length === 0 || appCommandsLoading}
+=======
+                            disabled={
+                              selectedApps.length === 0 || appCommandsLoading
+                            }
+>>>>>>> Stashed changes
                             className="h-8 px-3 rounded-xl bg-primary/80 hover:bg-primary/90 backdrop-blur-sm shadow-md hover:shadow transform transition-all duration-300 hover:scale-[1.02] text-xs relative overflow-hidden group"
                           >
                             {appCommandsLoading ? (
@@ -1024,7 +1318,13 @@ export default function Home() {
                                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 <Terminal className="h-3 w-3 mr-1 relative z-10" />
+<<<<<<< Updated upstream
                                 <span className="relative z-10">Générer les commandes</span>
+=======
+                                <span className="relative z-10">
+                                  Générer les commandes
+                                </span>
+>>>>>>> Stashed changes
                               </>
                             )}
                           </Button>
@@ -1034,7 +1334,13 @@ export default function Home() {
                       {/* Affichage des commandes générées */}
                       {appCommands.length > 0 && (
                         <div className="mt-6 space-y-3">
+<<<<<<< Updated upstream
                           <h3 className="text-sm font-medium">Commandes d&apos;installation</h3>
+=======
+                          <h3 className="text-sm font-medium">
+                            Commandes d&apos;installation
+                          </h3>
+>>>>>>> Stashed changes
                           <div className="space-y-3">
                             {appCommands.map((app, index) => (
                               <div
@@ -1044,7 +1350,13 @@ export default function Home() {
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-2">
                                     {getAppIcon(app.icon)}
+<<<<<<< Updated upstream
                                     <span className="font-medium text-sm">{app.appName}</span>
+=======
+                                    <span className="font-medium text-sm">
+                                      {app.appName}
+                                    </span>
+>>>>>>> Stashed changes
                                     <Badge
                                       variant="outline"
                                       className="bg-primary/5 text-xs font-normal"
@@ -1056,7 +1368,13 @@ export default function Home() {
                                     variant="ghost"
                                     size="sm"
                                     className="h-7 w-7 p-0"
+<<<<<<< Updated upstream
                                     onClick={() => copyCommandToClipboard(app.command)}
+=======
+                                    onClick={() =>
+                                      copyCommandToClipboard(app.command)
+                                    }
+>>>>>>> Stashed changes
                                   >
                                     <Copy className="h-3.5 w-3.5" />
                                   </Button>
@@ -1068,8 +1386,13 @@ export default function Home() {
                             ))}
                           </div>
                           <p className="text-xs text-muted-foreground mt-2">
+<<<<<<< Updated upstream
                             Vous pouvez copier ces commandes et les exécuter dans un terminal sur
                             votre système.
+=======
+                            Vous pouvez copier ces commandes et les exécuter
+                            dans un terminal sur votre système.
+>>>>>>> Stashed changes
                           </p>
                         </div>
                       )}
@@ -1095,27 +1418,49 @@ export default function Home() {
               </div>
               <div className="p-4 relative z-10 bg-gradient-to-b from-transparent via-background/10 via-background/20 via-background/30 to-background/40">
                 <p className="text-sm text-muted-foreground mb-4">
+<<<<<<< Updated upstream
                   Explorez d&apos;autres systèmes d&apos;exploitation pour vos besoins
                   informatiques.
                 </p>
                 <div className="flex justify-evenly items-center py-12 px-6">
                   {!isDetectedOS('macOS') && (
+=======
+                  Explorez d&apos;autres systèmes d&apos;exploitation pour vos
+                  besoins informatiques.
+                </p>
+                <div className="flex justify-evenly items-center py-12 px-6">
+                  {!isDetectedOS("macOS") && (
+>>>>>>> Stashed changes
                     <div className="relative">
                       <div className="p-4 rounded-full bg-primary/15 backdrop-blur-none icon-3d-metallic icon-copper group cursor-pointer">
                         <FaApple className="h-12 w-12 text-primary/80 icon-apple group-hover:opacity-0 transition-all duration-500" />
                         <div className="reflective-effect group-hover:opacity-0 transition-all duration-500"></div>
 
                         {/* Carte qui apparaît au survol */}
+<<<<<<< Updated upstream
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] opacity-0 scale-0 origin-center group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 bg-[#000000] rounded-xl shadow-2xl border-2 border-[#444444]/70 p-4 z-50">
+=======
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 invisible opacity-0 scale-0 group-hover:visible group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 w-[220px] bg-[#000000] rounded-xl shadow-2xl border-2 border-[#444444]/70 p-4 z-50 pointer-events-none group-hover:pointer-events-auto">
+>>>>>>> Stashed changes
                           <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 rounded-full bg-[#333333] shadow-[0_0_10px_rgba(255,255,255,0.15)]">
                               <FaApple className="h-6 w-6 text-white" />
                             </div>
+<<<<<<< Updated upstream
                             <h3 className="text-base font-semibold text-white">macOS</h3>
                           </div>
                           <p className="text-xs text-white/90 mb-3">
                             Système élégant et intuitif d&apos;Apple, parfaitement intégré à
                             l&apos;écosystème Apple.
+=======
+                            <h3 className="text-base font-semibold text-white">
+                              macOS
+                            </h3>
+                          </div>
+                          <p className="text-xs text-white/90 mb-3">
+                            Système élégant et intuitif d&apos;Apple,
+                            parfaitement intégré à l&apos;écosystème Apple.
+>>>>>>> Stashed changes
                           </p>
                           <div className="flex gap-2">
                             <a
@@ -1141,23 +1486,41 @@ export default function Home() {
                     </div>
                   )}
 
+<<<<<<< Updated upstream
                   {!isDetectedOS('Windows') && (
+=======
+                  {!isDetectedOS("Windows") && (
+>>>>>>> Stashed changes
                     <div className="relative">
                       <div className="p-4 rounded-full bg-[#0078d7]/20 backdrop-blur-none icon-3d-metallic icon-silver group cursor-pointer">
                         <FaWindows className="h-12 w-12 text-[#0078d7] icon-windows group-hover:opacity-0 transition-all duration-500" />
                         <div className="reflective-effect group-hover:opacity-0 transition-all duration-500"></div>
 
                         {/* Carte qui apparaît au survol */}
+<<<<<<< Updated upstream
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] opacity-0 scale-0 origin-center group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 bg-[#0078d7] rounded-xl shadow-2xl border-2 border-[#0063b1]/70 p-4 z-50">
+=======
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 invisible opacity-0 scale-0 group-hover:visible group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 w-[220px] bg-[#0078d7] rounded-xl shadow-2xl border-2 border-[#0063b1]/70 p-4 z-50 pointer-events-none group-hover:pointer-events-auto">
+>>>>>>> Stashed changes
                           <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 rounded-full bg-[#0063b1] shadow-[0_0_10px_rgba(255,255,255,0.15)]">
                               <FaWindows className="h-6 w-6 text-white" />
                             </div>
+<<<<<<< Updated upstream
                             <h3 className="text-base font-semibold text-white">Windows</h3>
                           </div>
                           <p className="text-xs text-white/90 mb-3">
                             Le système le plus utilisé au monde avec une large compatibilité
                             matérielle et logicielle.
+=======
+                            <h3 className="text-base font-semibold text-white">
+                              Windows
+                            </h3>
+                          </div>
+                          <p className="text-xs text-white/90 mb-3">
+                            Le système le plus utilisé au monde avec une large
+                            compatibilité matérielle et logicielle.
+>>>>>>> Stashed changes
                           </p>
                           <div className="flex gap-2">
                             <a
@@ -1183,23 +1546,41 @@ export default function Home() {
                     </div>
                   )}
 
+<<<<<<< Updated upstream
                   {!isDetectedOS('Linux') && (
+=======
+                  {!isDetectedOS("Linux") && (
+>>>>>>> Stashed changes
                     <div className="relative">
                       <div className="p-4 rounded-full bg-primary/15 backdrop-blur-none icon-3d-metallic icon-gold group cursor-pointer">
                         <FaLinux className="h-12 w-12 text-primary/80 icon-linux group-hover:opacity-0 transition-all duration-500" />
                         <div className="reflective-effect group-hover:opacity-0 transition-all duration-500"></div>
 
                         {/* Carte qui apparaît au survol */}
+<<<<<<< Updated upstream
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] opacity-0 scale-0 origin-center group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 bg-[#e67e22] rounded-xl shadow-2xl border-2 border-[#d35400]/70 p-4 z-50">
+=======
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 invisible opacity-0 scale-0 group-hover:visible group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 w-[220px] bg-[#e67e22] rounded-xl shadow-2xl border-2 border-[#d35400]/70 p-4 z-50 pointer-events-none group-hover:pointer-events-auto">
+>>>>>>> Stashed changes
                           <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 rounded-full bg-[#d35400] shadow-[0_0_12px_rgba(255,255,255,0.2)]">
                               <FaLinux className="h-6 w-6 text-white" />
                             </div>
+<<<<<<< Updated upstream
                             <h3 className="text-base font-semibold text-white">Linux</h3>
                           </div>
                           <p className="text-xs text-white/90 mb-3">
                             Système open source hautement personnalisable avec de nombreuses
                             distributions.
+=======
+                            <h3 className="text-base font-semibold text-white">
+                              Linux
+                            </h3>
+                          </div>
+                          <p className="text-xs text-white/90 mb-3">
+                            Système open source hautement personnalisable avec
+                            de nombreuses distributions.
+>>>>>>> Stashed changes
                           </p>
                           <div className="flex gap-2">
                             <a
