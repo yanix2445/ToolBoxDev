@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import { Greet } from "../wailsjs/go/main/App";
-import { OSInfo } from "./types";
+import { useEffect, useState } from 'react';
+
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import {
   Card,
   CardContent,
@@ -10,12 +12,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
-import { Separator } from "../components/ui/separator";
-import { Skeleton } from "../components/ui/skeleton";
+} from '../components/ui/card';
+import { Separator } from '../components/ui/separator';
+import { Skeleton } from '../components/ui/skeleton';
+
+import { Greet } from '../wailsjs/wailsjs/go/main/App';
+import { OSInfo, AppCategories, AppIconMap, AppDescriptions, AppInstallCommand } from './types';
+
+import { FaApple, FaWindows, FaLinux } from 'react-icons/fa';
 import {
   Terminal,
   Info,
@@ -23,8 +27,22 @@ import {
   Computer,
   Monitor,
   HardDrive,
-} from "lucide-react";
-import { FaApple, FaWindows, FaLinux } from "react-icons/fa";
+  Download,
+  Code,
+  Package,
+  Layers,
+  Check,
+  Copy,
+  GitBranch,
+  Globe,
+  Wrench as Tool,
+  Zap,
+  Server,
+  Tag,
+  X,
+  ExternalLink,
+  Play,
+} from 'lucide-react';
 
 declare global {
   interface Window {
@@ -52,10 +70,10 @@ export default function Home() {
     total: '',
   });
   const [refreshInterval, setRefreshInterval] = useState<number | null>(null);
-  const [installerStatus, setInstallerStatus] = useState<
-    "idle" | "loading" | "success" | "error"
-  >("idle");
-  const [installerMessage, setInstallerMessage] = useState<string>("");
+  const [installerStatus, setInstallerStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    'idle'
+  );
+  const [installerMessage, setInstallerMessage] = useState<string>('');
   const [availableApps, setAvailableApps] = useState<string[]>([]);
   const [selectedApps, setSelectedApps] = useState<string[]>([]);
   const [appCommands, setAppCommands] = useState<AppInstallCommand[]>([]);
@@ -87,27 +105,25 @@ export default function Home() {
 
   // Fonction pour installer un gestionnaire de paquets selon l'OS
   const installPackageManager = async () => {
-    setInstallerStatus("loading");
+    setInstallerStatus('loading');
     setInstallerMessage("Préparation de l'installation...");
 
     try {
       if (!osInfo) {
-        throw new Error("Informations système non disponibles");
+        throw new Error('Informations système non disponibles');
       }
 
       if (window.go?.main?.App?.InstallPackageManager) {
         const result = await window.go.main.App.InstallPackageManager();
         setInstallerMessage(result);
-        setInstallerStatus("success");
+        setInstallerStatus('success');
       } else {
-        throw new Error(
-          "La méthode InstallPackageManager n'est pas disponible"
-        );
+        throw new Error("La méthode InstallPackageManager n'est pas disponible");
       }
     } catch (error) {
       console.error("Erreur lors de l'installation:", error);
       setInstallerMessage("Une erreur s'est produite pendant l'installation.");
-      setInstallerStatus("error");
+      setInstallerStatus('error');
     }
   };
 
@@ -119,17 +135,14 @@ export default function Home() {
         setAvailableApps(apps);
       }
     } catch (error) {
-      console.error(
-        "Erreur lors du chargement des applications disponibles:",
-        error
-      );
+      console.error('Erreur lors du chargement des applications disponibles:', error);
     }
   };
 
   // Fonction pour basculer la sélection d'une application
   const toggleAppSelection = (appName: string) => {
     if (selectedApps.includes(appName)) {
-      setSelectedApps(selectedApps.filter((app) => app !== appName));
+      setSelectedApps(selectedApps.filter(app => app !== appName));
     } else {
       setSelectedApps([...selectedApps, appName]);
     }
@@ -145,29 +158,24 @@ export default function Home() {
     try {
       for (const appName of selectedApps) {
         try {
-          const command = await window.go.main.App.GenerateInstallCommand(
-            appName
-          );
+          const command = await window.go.main.App.GenerateInstallCommand(appName);
           const category = getCategoryForApp(appName);
 
           commands.push({
             appName,
             command,
-            icon: AppIconMap[appName] || "package",
+            icon: AppIconMap[appName] || 'package',
             category,
             description: AppDescriptions[appName] || appName,
           });
         } catch (error) {
-          console.error(
-            `Erreur lors de la génération de la commande pour ${appName}:`,
-            error
-          );
+          console.error(`Erreur lors de la génération de la commande pour ${appName}:`, error);
         }
       }
 
       setAppCommands(commands);
     } catch (error) {
-      console.error("Erreur lors de la génération des commandes:", error);
+      console.error('Erreur lors de la génération des commandes:', error);
     } finally {
       setAppCommandsLoading(false);
     }
@@ -178,10 +186,10 @@ export default function Home() {
     navigator.clipboard
       .writeText(command)
       .then(() => {
-        console.log("Commande copiée dans le presse-papiers");
+        console.log('Commande copiée dans le presse-papiers');
       })
-      .catch((err) => {
-        console.error("Erreur lors de la copie de la commande:", err);
+      .catch(err => {
+        console.error('Erreur lors de la copie de la commande:', err);
       });
   };
 
@@ -192,21 +200,21 @@ export default function Home() {
         return category.name;
       }
     }
-    return "Autre";
+    return 'Autre';
   };
 
   // Fonction pour obtenir l'icône de catégorie
   const getCategoryIcon = (categoryName: string) => {
     switch (categoryName) {
-      case "Développement":
+      case 'Développement':
         return <Code className="h-4 w-4" />;
-      case "Navigateurs":
+      case 'Navigateurs':
         return <Globe className="h-4 w-4" />;
-      case "Utilitaires":
+      case 'Utilitaires':
         return <Tool className="h-4 w-4" />;
-      case "Productivité":
+      case 'Productivité':
         return <Zap className="h-4 w-4" />;
-      case "Serveurs":
+      case 'Serveurs':
         return <Server className="h-4 w-4" />;
       default:
         return <Package className="h-4 w-4" />;
@@ -216,33 +224,33 @@ export default function Home() {
   // Fonction pour obtenir l'icône d'application
   const getAppIcon = (iconName: string) => {
     switch (iconName) {
-      case "git-branch":
+      case 'git-branch':
         return <GitBranch className="h-4 w-4" />;
-      case "nodejs":
+      case 'nodejs':
         return <Code className="h-4 w-4" />;
-      case "python":
+      case 'python':
         return <Code className="h-4 w-4" />;
-      case "code":
+      case 'code':
         return <Code className="h-4 w-4" />;
-      case "docker":
+      case 'docker':
         return <Layers className="h-4 w-4" />;
-      case "chrome":
+      case 'chrome':
         return <Globe className="h-4 w-4" />;
-      case "firefox":
+      case 'firefox':
         return <Globe className="h-4 w-4" />;
-      case "terminal":
+      case 'terminal':
         return <Terminal className="h-4 w-4" />;
-      case "terminal-square":
+      case 'terminal-square':
         return <Terminal className="h-4 w-4" />;
-      case "linux":
+      case 'linux':
         return <Terminal className="h-4 w-4" />;
-      case "search":
+      case 'search':
         return <Zap className="h-4 w-4" />;
-      case "server":
+      case 'server':
         return <Server className="h-4 w-4" />;
-      case "pen-tool":
+      case 'pen-tool':
         return <Code className="h-4 w-4" />;
-      case "package":
+      case 'package':
         return <Package className="h-4 w-4" />;
       default:
         return <Package className="h-4 w-4" />;
@@ -646,10 +654,11 @@ export default function Home() {
               </div>
             )}
 
-            {isDetectedOS("Windows") && (
-              <div className="relative overflow-hidden rounded-2xl shadow-lg group hover:shadow-xl transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-80"></div>
-                <div className="absolute -bottom-4 -right-4 w-40 h-40 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-2xl"></div>
+            {isDetectedOS('Windows') && (
+              <div className="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-background/95 via-background/90 to-background/85 backdrop-blur-none group hover:shadow-lg transition-all duration-700 transform hover:scale-[1.01] hover:translate-y-[-2px] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-40 before:z-[-1]">
+                <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
+                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-30 transition-opacity duration-700 group-hover:opacity-40"></div>
+                <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-tr from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-20 transition-opacity duration-700 group-hover:opacity-30"></div>
 
                 <div className="relative z-10 grid grid-cols-12 gap-0 overflow-hidden">
                   <div className="col-span-12 sm:col-span-4 p-4 backdrop-blur-sm backdrop-saturate-150 flex items-center gap-4 bg-background/60">
@@ -705,10 +714,11 @@ export default function Home() {
               </div>
             )}
 
-            {isDetectedOS("Linux") && (
-              <div className="relative overflow-hidden rounded-2xl shadow-lg group hover:shadow-xl transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-80"></div>
-                <div className="absolute -bottom-4 -right-4 w-40 h-40 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-2xl"></div>
+            {isDetectedOS('Linux') && (
+              <div className="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-background/95 via-background/90 to-background/85 backdrop-blur-none group hover:shadow-lg transition-all duration-700 transform hover:scale-[1.01] hover:translate-y-[-2px] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-40 before:z-[-1]">
+                <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
+                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-30 transition-opacity duration-700 group-hover:opacity-40"></div>
+                <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-tr from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-20 transition-opacity duration-700 group-hover:opacity-30"></div>
 
                 <div className="relative z-10 grid grid-cols-12 gap-0 overflow-hidden">
                   <div className="col-span-12 sm:col-span-4 p-4 backdrop-blur-sm backdrop-saturate-150 flex items-center gap-4 bg-background/60">
@@ -774,9 +784,7 @@ export default function Home() {
                   <Monitor className="h-6 w-6 text-primary" />
                   <div className="reflective-effect"></div>
                 </div>
-                <h2 className="text-primary font-bold text-lg font-heading">
-                  Système
-                </h2>
+                <h2 className="text-primary font-bold text-lg font-heading">Système</h2>
               </div>
               <div className="p-4 relative z-10 bg-gradient-to-b from-transparent via-background/10 via-background/20 via-background/30 to-background/40">
                 {osInfo && (
@@ -848,50 +856,48 @@ export default function Home() {
                     <div>
                       <p className="text-sm text-muted-foreground mb-3">
                         {osInfo.isMacOS
-                          ? "Installez Homebrew, le gestionnaire de paquets pour macOS."
+                          ? 'Installez Homebrew, le gestionnaire de paquets pour macOS.'
                           : osInfo.isWindows
-                          ? "Installez Winget, le gestionnaire de paquets pour Windows."
-                          : "Utilisez le gestionnaire de paquets pour votre distribution Linux."}
+                            ? 'Installez Winget, le gestionnaire de paquets pour Windows.'
+                            : 'Utilisez le gestionnaire de paquets pour votre distribution Linux.'}
                       </p>
                       <div className="rounded-xl p-4 bg-gradient-to-br from-background/85 to-background/65 shadow-md backdrop-blur-sm border border-primary/10 overflow-hidden">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                           <div className="space-y-2">
                             <h3 className="font-semibold text-primary">
                               {osInfo.isMacOS
-                                ? "Homebrew"
+                                ? 'Homebrew'
                                 : osInfo.isWindows
-                                ? "Windows Package Manager (winget)"
-                                : "Gestionnaire de paquets Linux"}
+                                  ? 'Windows Package Manager (winget)'
+                                  : 'Gestionnaire de paquets Linux'}
                             </h3>
                             <p className="text-sm text-muted-foreground">
                               {osInfo.isMacOS
-                                ? "Le gestionnaire de paquets manquant pour macOS"
+                                ? 'Le gestionnaire de paquets manquant pour macOS'
                                 : osInfo.isWindows
-                                ? "Le gestionnaire de paquets officiel pour Windows"
-                                : "Mettez à jour vos dépôts et paquets"}
+                                  ? 'Le gestionnaire de paquets officiel pour Windows'
+                                  : 'Mettez à jour vos dépôts et paquets'}
                             </p>
-                            {installerStatus !== "idle" && (
+                            {installerStatus !== 'idle' && (
                               <div
                                 className={`mt-2 p-3 rounded-lg ${
-                                  installerStatus === "error"
-                                    ? "bg-destructive/10 text-destructive"
-                                    : installerStatus === "success"
-                                    ? "bg-green-500/10 text-green-500"
-                                    : "bg-primary/10 text-primary animate-pulse"
+                                  installerStatus === 'error'
+                                    ? 'bg-destructive/10 text-destructive'
+                                    : installerStatus === 'success'
+                                      ? 'bg-green-500/10 text-green-500'
+                                      : 'bg-primary/10 text-primary animate-pulse'
                                 }`}
                               >
-                                <p className="text-sm font-medium">
-                                  {installerMessage}
-                                </p>
+                                <p className="text-sm font-medium">{installerMessage}</p>
                               </div>
                             )}
                           </div>
                           <Button
                             onClick={installPackageManager}
-                            disabled={installerStatus === "loading"}
+                            disabled={installerStatus === 'loading'}
                             className="h-9 px-4 rounded-xl bg-primary/80 hover:bg-primary/90 backdrop-blur-sm shadow-md hover:shadow transform transition-all duration-300 hover:scale-[1.02] relative overflow-hidden group"
                           >
-                            {installerStatus === "loading" ? (
+                            {installerStatus === 'loading' ? (
                               <>
                                 <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                                 Installation...
@@ -902,9 +908,9 @@ export default function Home() {
                                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 <Download className="h-4 w-4 mr-2 relative z-10" />
                                 <span className="relative z-10">
-                                  {installerStatus === "success"
-                                    ? "Instructions affichées"
-                                    : "Installer"}
+                                  {installerStatus === 'success'
+                                    ? 'Instructions affichées'
+                                    : 'Installer'}
                                 </span>
                               </>
                             )}
@@ -936,20 +942,14 @@ export default function Home() {
                   {osInfo && (
                     <div>
                       <p className="text-sm text-muted-foreground mb-3">
-                        Sélectionnez les applications que vous souhaitez
-                        installer sur votre système{" "}
-                        {osInfo.isMacOS
-                          ? "macOS"
-                          : osInfo.isWindows
-                          ? "Windows"
-                          : "Linux"}
-                        .
+                        Sélectionnez les applications que vous souhaitez installer sur votre système{' '}
+                        {osInfo.isMacOS ? 'macOS' : osInfo.isWindows ? 'Windows' : 'Linux'}.
                       </p>
 
                       {/* Sélection d'applications par catégorie */}
                       <div className="space-y-6">
-                        {AppCategories.map((category) => {
-                          const filteredApps = category.apps.filter((app) =>
+                        {AppCategories.map(category => {
+                          const filteredApps = category.apps.filter(app =>
                             availableApps.includes(app)
                           );
                           if (filteredApps.length === 0) return null;
@@ -958,31 +958,23 @@ export default function Home() {
                             <div key={category.name} className="space-y-2">
                               <div className="flex items-center gap-2">
                                 {getCategoryIcon(category.name)}
-                                <h3 className="text-sm font-semibold">
-                                  {category.name}
-                                </h3>
+                                <h3 className="text-sm font-semibold">{category.name}</h3>
                               </div>
                               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                                {filteredApps.map((app) => (
+                                {filteredApps.map(app => (
                                   <Button
                                     key={app}
-                                    variant={
-                                      selectedApps.includes(app)
-                                        ? "default"
-                                        : "outline"
-                                    }
+                                    variant={selectedApps.includes(app) ? 'default' : 'outline'}
                                     size="sm"
                                     className={`h-auto py-2 px-3 justify-start gap-2 text-left ${
                                       selectedApps.includes(app)
-                                        ? "bg-primary/20 text-primary border-primary/30"
-                                        : "hover:bg-primary/10 hover:text-primary/90"
+                                        ? 'bg-primary/20 text-primary border-primary/30'
+                                        : 'hover:bg-primary/10 hover:text-primary/90'
                                     }`}
                                     onClick={() => toggleAppSelection(app)}
                                   >
-                                    {getAppIcon(AppIconMap[app] || "package")}
-                                    <span className="flex-1 truncate">
-                                      {app}
-                                    </span>
+                                    {getAppIcon(AppIconMap[app] || 'package')}
+                                    <span className="flex-1 truncate">{app}</span>
                                     {selectedApps.includes(app) && (
                                       <Check className="h-3 w-3 ml-1 flex-shrink-0" />
                                     )}
@@ -998,13 +990,10 @@ export default function Home() {
                       <div className="mt-4 flex justify-between items-center">
                         <div>
                           {selectedApps.length > 0 && (
-                            <Badge
-                              variant="outline"
-                              className="bg-primary/10 text-primary"
-                            >
+                            <Badge variant="outline" className="bg-primary/10 text-primary">
                               {selectedApps.length} application
-                              {selectedApps.length > 1 ? "s" : ""} sélectionnée
-                              {selectedApps.length > 1 ? "s" : ""}
+                              {selectedApps.length > 1 ? 's' : ''} sélectionnée
+                              {selectedApps.length > 1 ? 's' : ''}
                             </Badge>
                           )}
                         </div>
@@ -1022,9 +1011,7 @@ export default function Home() {
                           )}
                           <Button
                             onClick={generateInstallCommands}
-                            disabled={
-                              selectedApps.length === 0 || appCommandsLoading
-                            }
+                            disabled={selectedApps.length === 0 || appCommandsLoading}
                             className="h-8 px-3 rounded-xl bg-primary/80 hover:bg-primary/90 backdrop-blur-sm shadow-md hover:shadow transform transition-all duration-300 hover:scale-[1.02] text-xs relative overflow-hidden group"
                           >
                             {appCommandsLoading ? (
@@ -1037,9 +1024,7 @@ export default function Home() {
                                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 <Terminal className="h-3 w-3 mr-1 relative z-10" />
-                                <span className="relative z-10">
-                                  Générer les commandes
-                                </span>
+                                <span className="relative z-10">Générer les commandes</span>
                               </>
                             )}
                           </Button>
@@ -1049,9 +1034,7 @@ export default function Home() {
                       {/* Affichage des commandes générées */}
                       {appCommands.length > 0 && (
                         <div className="mt-6 space-y-3">
-                          <h3 className="text-sm font-medium">
-                            Commandes d&apos;installation
-                          </h3>
+                          <h3 className="text-sm font-medium">Commandes d&apos;installation</h3>
                           <div className="space-y-3">
                             {appCommands.map((app, index) => (
                               <div
@@ -1061,9 +1044,7 @@ export default function Home() {
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-2">
                                     {getAppIcon(app.icon)}
-                                    <span className="font-medium text-sm">
-                                      {app.appName}
-                                    </span>
+                                    <span className="font-medium text-sm">{app.appName}</span>
                                     <Badge
                                       variant="outline"
                                       className="bg-primary/5 text-xs font-normal"
@@ -1075,9 +1056,7 @@ export default function Home() {
                                     variant="ghost"
                                     size="sm"
                                     className="h-7 w-7 p-0"
-                                    onClick={() =>
-                                      copyCommandToClipboard(app.command)
-                                    }
+                                    onClick={() => copyCommandToClipboard(app.command)}
                                   >
                                     <Copy className="h-3.5 w-3.5" />
                                   </Button>
@@ -1089,8 +1068,8 @@ export default function Home() {
                             ))}
                           </div>
                           <p className="text-xs text-muted-foreground mt-2">
-                            Vous pouvez copier ces commandes et les exécuter
-                            dans un terminal sur votre système.
+                            Vous pouvez copier ces commandes et les exécuter dans un terminal sur
+                            votre système.
                           </p>
                         </div>
                       )}
@@ -1101,40 +1080,152 @@ export default function Home() {
             </div>
 
             {/* Autres OS en version épurée */}
-            <div className="flex gap-3">
-              {!isDetectedOS("macOS") && (
-                <div className="flex-1 relative overflow-hidden rounded-2xl group transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
-                  <div className="absolute inset-0 bg-gradient-to-br from-background/90 to-background/70 backdrop-blur-sm"></div>
-                  <div className="relative p-4 flex flex-col items-center justify-center gap-2 z-10">
-                    <div className="p-3 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 backdrop-blur-sm">
-                      <FaApple className="h-5 w-5 text-primary/70" />
-                    </div>
-                    <span className="text-sm font-medium">macOS</span>
-                  </div>
+            <div className="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-background/95 via-background/90 to-background/85 backdrop-blur-none group hover:shadow-lg transition-all duration-700 transform hover:scale-[1.01] hover:translate-y-[-2px] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-40 before:z-[-1]">
+              <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-30 transition-opacity duration-700 group-hover:opacity-40"></div>
+              <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-tr from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-20 transition-opacity duration-700 group-hover:opacity-30"></div>
+              <div className="py-3 px-4 relative z-10 border-b border-primary/10 bg-gradient-to-r from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent flex items-center gap-2 shadow-sm">
+                <div className="p-2 rounded-full bg-primary/20 shadow-lg backdrop-blur-none transform transition-transform duration-700 ease-in-out group-hover:scale-105 icon-3d-metallic animated ring-1 ring-primary/30">
+                  <Computer className="h-6 w-6 text-primary" />
+                  <div className="reflective-effect"></div>
                 </div>
-              )}
-              {!isDetectedOS("Windows") && (
-                <div className="flex-1 relative overflow-hidden rounded-2xl group transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
-                  <div className="absolute inset-0 bg-gradient-to-br from-background/90 to-background/70 backdrop-blur-sm"></div>
-                  <div className="relative p-4 flex flex-col items-center justify-center gap-2 z-10">
-                    <div className="p-3 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 backdrop-blur-sm">
-                      <FaWindows className="h-5 w-5 text-primary/70" />
+                <h2 className="text-primary font-bold text-lg font-heading">
+                  Autres systèmes d&apos;exploitation
+                </h2>
+              </div>
+              <div className="p-4 relative z-10 bg-gradient-to-b from-transparent via-background/10 via-background/20 via-background/30 to-background/40">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Explorez d&apos;autres systèmes d&apos;exploitation pour vos besoins
+                  informatiques.
+                </p>
+                <div className="flex justify-evenly items-center py-12 px-6">
+                  {!isDetectedOS('macOS') && (
+                    <div className="relative">
+                      <div className="p-4 rounded-full bg-primary/15 backdrop-blur-none icon-3d-metallic icon-copper group cursor-pointer">
+                        <FaApple className="h-12 w-12 text-primary/80 icon-apple group-hover:opacity-0 transition-all duration-500" />
+                        <div className="reflective-effect group-hover:opacity-0 transition-all duration-500"></div>
+
+                        {/* Carte qui apparaît au survol */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] opacity-0 scale-0 origin-center group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 bg-[#000000] rounded-xl shadow-2xl border-2 border-[#444444]/70 p-4 z-50">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 rounded-full bg-[#333333] shadow-[0_0_10px_rgba(255,255,255,0.15)]">
+                              <FaApple className="h-6 w-6 text-white" />
+                            </div>
+                            <h3 className="text-base font-semibold text-white">macOS</h3>
+                          </div>
+                          <p className="text-xs text-white/90 mb-3">
+                            Système élégant et intuitif d&apos;Apple, parfaitement intégré à
+                            l&apos;écosystème Apple.
+                          </p>
+                          <div className="flex gap-2">
+                            <a
+                              href="https://www.apple.com/fr/macos/sonoma/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 h-8 rounded-md bg-white/15 hover:bg-white/25 text-white text-xs border border-white/30 flex items-center justify-center z-[100]"
+                            >
+                              <ExternalLink className="h-3 w-3 mr-2" />
+                              Site officiel
+                            </a>
+                            <a
+                              href="https://youtu.be/t7siwq7JkWM?si=Wk3xc3zNMPKAErkq"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="h-8 w-8 rounded-md bg-white/15 hover:bg-white/25 text-white border border-white/30 flex items-center justify-center z-[100]"
+                            >
+                              <Play className="h-3 w-3" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-sm font-medium">Windows</span>
-                  </div>
-                </div>
-              )}
-              {!isDetectedOS("Linux") && (
-                <div className="flex-1 relative overflow-hidden rounded-2xl group transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
-                  <div className="absolute inset-0 bg-gradient-to-br from-background/90 to-background/70 backdrop-blur-sm"></div>
-                  <div className="relative p-4 flex flex-col items-center justify-center gap-2 z-10">
-                    <div className="p-3 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 backdrop-blur-sm">
-                      <FaLinux className="h-5 w-5 text-primary/70" />
+                  )}
+
+                  {!isDetectedOS('Windows') && (
+                    <div className="relative">
+                      <div className="p-4 rounded-full bg-[#0078d7]/20 backdrop-blur-none icon-3d-metallic icon-silver group cursor-pointer">
+                        <FaWindows className="h-12 w-12 text-[#0078d7] icon-windows group-hover:opacity-0 transition-all duration-500" />
+                        <div className="reflective-effect group-hover:opacity-0 transition-all duration-500"></div>
+
+                        {/* Carte qui apparaît au survol */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] opacity-0 scale-0 origin-center group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 bg-[#0078d7] rounded-xl shadow-2xl border-2 border-[#0063b1]/70 p-4 z-50">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 rounded-full bg-[#0063b1] shadow-[0_0_10px_rgba(255,255,255,0.15)]">
+                              <FaWindows className="h-6 w-6 text-white" />
+                            </div>
+                            <h3 className="text-base font-semibold text-white">Windows</h3>
+                          </div>
+                          <p className="text-xs text-white/90 mb-3">
+                            Le système le plus utilisé au monde avec une large compatibilité
+                            matérielle et logicielle.
+                          </p>
+                          <div className="flex gap-2">
+                            <a
+                              href="https://www.microsoft.com/fr-fr/windows/features"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 h-8 rounded-md bg-white/15 hover:bg-white/25 text-white text-xs border border-white/30 flex items-center justify-center z-[100]"
+                            >
+                              <ExternalLink className="h-3 w-3 mr-2" />
+                              Site officiel
+                            </a>
+                            <a
+                              href="https://youtu.be/_85L5NWT87M?si=s3EzZs6oXqj6oiTv"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="h-8 w-8 rounded-md bg-white/15 hover:bg-white/25 text-white border border-white/30 flex items-center justify-center z-[100]"
+                            >
+                              <Play className="h-3 w-3" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-sm font-medium">Linux</span>
-                  </div>
+                  )}
+
+                  {!isDetectedOS('Linux') && (
+                    <div className="relative">
+                      <div className="p-4 rounded-full bg-primary/15 backdrop-blur-none icon-3d-metallic icon-gold group cursor-pointer">
+                        <FaLinux className="h-12 w-12 text-primary/80 icon-linux group-hover:opacity-0 transition-all duration-500" />
+                        <div className="reflective-effect group-hover:opacity-0 transition-all duration-500"></div>
+
+                        {/* Carte qui apparaît au survol */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] opacity-0 scale-0 origin-center group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 bg-[#e67e22] rounded-xl shadow-2xl border-2 border-[#d35400]/70 p-4 z-50">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 rounded-full bg-[#d35400] shadow-[0_0_12px_rgba(255,255,255,0.2)]">
+                              <FaLinux className="h-6 w-6 text-white" />
+                            </div>
+                            <h3 className="text-base font-semibold text-white">Linux</h3>
+                          </div>
+                          <p className="text-xs text-white/90 mb-3">
+                            Système open source hautement personnalisable avec de nombreuses
+                            distributions.
+                          </p>
+                          <div className="flex gap-2">
+                            <a
+                              href="https://www.kernel.org/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 h-8 rounded-md bg-white/15 hover:bg-white/25 text-white text-xs border border-white/30 flex items-center justify-center z-[100]"
+                            >
+                              <ExternalLink className="h-3 w-3 mr-2" />
+                              Site officiel
+                            </a>
+                            <a
+                              href="https://youtu.be/xLhCOFWaY_M?si=vxcJIvG6mUjn8dal"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="h-8 w-8 rounded-md bg-white/15 hover:bg-white/25 text-white border border-white/30 flex items-center justify-center z-[100]"
+                            >
+                              <Play className="h-3 w-3" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         ) : (
