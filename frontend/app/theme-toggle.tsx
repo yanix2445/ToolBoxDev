@@ -25,7 +25,7 @@ export function ThemeToggle() {
     if (!theme) {
       setTheme('dark');
     }
-  }, []);
+  }, [theme, setTheme]);
 
   if (!mounted) {
     return (
