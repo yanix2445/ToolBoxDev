@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { MoonIcon, SunIcon } from "lucide-react";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { MoonIcon, SunIcon } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
 
-import { Button } from "../components/ui/button";
+import { Button } from '../components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-} from "../components/ui/dropdown-menu";
+} from '../components/ui/dropdown-menu';
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -23,9 +23,9 @@ export function ThemeToggle() {
     setMounted(true);
     // S'assurer que le thème est défini lors du premier rendu
     if (!theme) {
-      setTheme("dark");
+      setTheme('dark');
     }
-  }, []);
+  }, [theme, setTheme]);
 
   if (!mounted) {
     return (
@@ -45,7 +45,7 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+        <DropdownMenuRadioGroup value={theme || 'dark'} onValueChange={setTheme}>
           <DropdownMenuRadioItem value="light">Clair</DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="dark">Sombre</DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
