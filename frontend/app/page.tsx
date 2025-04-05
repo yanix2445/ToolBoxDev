@@ -21,12 +21,14 @@ import {
   X,
   ExternalLink,
   Play,
+  Pen,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { FaApple, FaWindows, FaLinux } from 'react-icons/fa';
 
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { Card, CardHeader, CardContent } from '../components/ui/card';
 import { Greet } from '../wailsjs/wailsjs/go/main/App';
 
 import { OSInfo, AppCategories, AppIconMap, AppDescriptions, AppInstallCommand } from './types';
@@ -41,10 +43,225 @@ declare global {
           InstallPackageManager(): Promise<string>;
           GetAvailableApps(): Promise<string[]>;
           GenerateInstallCommand(appName: string): Promise<string>;
+          BrowserOpenURL(url: string): void;
+          ValidateCommand(command: string, appName: string): Promise<string>;
         };
       };
     };
+    runtime: {
+      BrowserOpenURL(url: string): void;
+    };
   }
+}
+
+// Fonction pour obtenir l'icône d'application
+const getAppIcon = (iconName: string) => {
+  switch (iconName) {
+    case 'git-branch':
+      return <GitBranch className="h-4 w-4" />;
+    case 'nodejs':
+      return <Code className="h-4 w-4" />;
+    case 'python':
+      return <Code className="h-4 w-4" />;
+    case 'code':
+      return <Code className="h-4 w-4" />;
+    case 'docker':
+      return <Layers className="h-4 w-4" />;
+    case 'chrome':
+      return <Globe className="h-4 w-4" />;
+    case 'firefox':
+      return <Globe className="h-4 w-4" />;
+    case 'terminal':
+      return <Terminal className="h-4 w-4" />;
+    case 'terminal-square':
+      return <Terminal className="h-4 w-4" />;
+    case 'linux':
+      return <Terminal className="h-4 w-4" />;
+    case 'search':
+      return <Zap className="h-4 w-4" />;
+    case 'server':
+      return <Server className="h-4 w-4" />;
+    case 'pen-tool':
+      return <Code className="h-4 w-4" />;
+    case 'package':
+      return <Package className="h-4 w-4" />;
+    default:
+      return <Package className="h-4 w-4" />;
+  }
+};
+
+// Remplacement du composant AppCommandItem complexe par une approche plus simple
+function CommandCard({
+  app,
+  onValidate,
+  validationResults,
+  commandValidating,
+  onCopy,
+}: {
+  app: AppInstallCommand;
+  onValidate: (command: string, appName: string) => void;
+  validationResults: Record<string, 'loading' | 'success' | 'warning' | 'error' | null>;
+  commandValidating: boolean;
+  onCopy: (command: string) => void;
+}) {
+  // État local pour la commande éditée et le mode d'édition
+  const [command, setCommand] = useState(app.command);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Validation directe de la commande actuelle
+  const handleValidate = () => {
+    onValidate(command, app.appName);
+  };
+
+  // Fonction pour copier la commande
+  const handleCopy = () => {
+    onCopy(command);
+  };
+
+  // Rendu du composant
+  return (
+    <Card className="mb-4 overflow-hidden">
+      <CardHeader className="p-3 pb-2 flex-row justify-between items-center space-y-0 gap-2 bg-background/95">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md flex items-center justify-center bg-background/80 p-1 border border-primary/5">
+            {getAppIcon(app.icon || 'package')}
+          </div>
+          <span className="font-medium text-sm">{app.appName}</span>
+          <Badge variant="outline" className="bg-primary/5 text-xs font-normal">
+            {app.category}
+          </Badge>
+
+          {validationResults && validationResults[app.appName] === 'loading' && (
+            <div className="h-3 w-3 animate-spin rounded-full border border-primary border-t-transparent ml-1" />
+          )}
+          {validationResults && validationResults[app.appName] === 'success' && (
+            <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
+              <Check className="h-3 w-3 mr-1" />
+              Valide
+            </Badge>
+          )}
+          {validationResults && validationResults[app.appName] === 'warning' && (
+            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 text-xs">
+              <AlertCircle className="h-3 w-3 mr-1" />À vérifier
+            </Badge>
+          )}
+          {validationResults && validationResults[app.appName] === 'error' && (
+            <Badge variant="outline" className="bg-destructive/10 text-destructive text-xs">
+              <X className="h-3 w-3 mr-1" />
+              Erreur
+            </Badge>
+          )}
+        </div>
+
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={handleCopy}
+            title="Copier la commande"
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={handleValidate}
+            disabled={commandValidating}
+            title="Vérifier la commande"
+          >
+            <AlertCircle className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={() => setIsEditing(!isEditing)}
+            title={isEditing ? "Terminer l'édition" : 'Modifier la commande'}
+          >
+            {isEditing ? (
+              <Check className="h-3.5 w-3.5 text-green-500" />
+            ) : (
+              <Pen className="h-3.5 w-3.5" />
+            )}
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-3 pt-2 bg-background/80">
+        {isEditing ? (
+          <div className="space-y-3">
+            <textarea
+              className="w-full text-xs bg-background/90 rounded p-2 font-mono border border-primary/20 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 min-h-[80px] outline-none resize-y"
+              value={command}
+              onChange={e => setCommand(e.target.value)}
+              autoFocus
+            />
+            <div className="flex justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs text-yellow-600 border-yellow-500/20 hover:bg-yellow-500/10"
+                onClick={handleValidate}
+                disabled={commandValidating}
+              >
+                {commandValidating ? (
+                  <div className="h-3 w-3 mr-1 animate-spin rounded-full border border-current border-t-transparent" />
+                ) : (
+                  <AlertCircle className="h-3.5 w-3.5 mr-1" />
+                )}
+                Vérifier
+              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    setCommand(app.command);
+                    setIsEditing(false);
+                  }}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="h-7 text-xs bg-primary/80 hover:bg-primary/90"
+                  onClick={() => setIsEditing(false)}
+                >
+                  Appliquer
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="text-xs bg-background/80 rounded p-2 font-mono border border-primary/5 overflow-x-auto cursor-pointer"
+            onClick={() => setIsEditing(true)}
+          >
+            {command}
+          </div>
+        )}
+      </CardContent>
+
+      {validationResults && validationResults[app.appName] === 'warning' && (
+        <div className="p-3 text-xs bg-yellow-500/5 border-t border-yellow-500/10 text-yellow-600">
+          <p>Cette commande pourrait nécessiter des ajustements selon votre système.</p>
+          <p className="mt-1">Vérifiez que le gestionnaire de paquets est bien installé.</p>
+        </div>
+      )}
+      {validationResults && validationResults[app.appName] === 'error' && (
+        <div className="p-3 text-xs bg-destructive/5 border-t border-destructive/10 text-destructive">
+          <p>La commande semble incorrecte ou n&apos;a pas pu être générée correctement.</p>
+          <p className="mt-1">
+            Vous pouvez consulter la documentation officielle pour {app.appName}.
+          </p>
+        </div>
+      )}
+    </Card>
+  );
 }
 
 export default function Home() {
@@ -65,6 +282,73 @@ export default function Home() {
   const [selectedApps, setSelectedApps] = useState<string[]>([]);
   const [appCommands, setAppCommands] = useState<AppInstallCommand[]>([]);
   const [appCommandsLoading, setAppCommandsLoading] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('Toutes');
+  const [commandValidating, setCommandValidating] = useState<boolean>(false);
+  const [validationResults, setValidationResults] = useState<{
+    [key: string]: 'success' | 'warning' | 'error' | 'loading' | null;
+  }>({});
+
+  // Ajouter cette section pour centraliser les liens des OS
+  const osLinks = {
+    macOS: {
+      official: 'https://www.apple.com/macos/',
+      video: 'https://www.youtube.com/watch?v=KQVFhUU1KzM',
+      name: 'macOS',
+      description:
+        "Système élégant et intuitif d'Apple, parfaitement intégré à l'écosystème Apple.",
+      bgColor: '#000000',
+      borderColor: '#444444',
+      iconBgColor: '#333333',
+    },
+    Windows: {
+      official: 'https://www.microsoft.com/windows/',
+      video: 'https://www.youtube.com/watch?v=6lTrZopI5y0',
+      name: 'Windows',
+      description:
+        'Le système le plus utilisé au monde avec une large compatibilité matérielle et logicielle.',
+      bgColor: '#0078d7',
+      borderColor: '#0063b1',
+      iconBgColor: '#0063b1',
+    },
+    Linux: {
+      official: 'https://ubuntu.com/',
+      video: 'https://www.youtube.com/watch?v=D9h_0dnSGWk',
+      name: 'Linux',
+      description:
+        'Système open source hautement personnalisable avec de nombreuses distributions.',
+      bgColor: '#e67e22',
+      borderColor: '#d35400',
+      iconBgColor: '#d35400',
+    },
+  };
+
+  // Fonction pour ouvrir un lien en sécurité avec l'API Wails
+  const openLink = (url: string) => {
+    try {
+      // Utiliser l'API Wails pour ouvrir des URL via window.runtime
+      if (window.runtime && typeof window.runtime.BrowserOpenURL === 'function') {
+        window.runtime.BrowserOpenURL(url);
+      } else if (
+        window.go?.main?.App?.BrowserOpenURL &&
+        typeof window.go.main.App.BrowserOpenURL === 'function'
+      ) {
+        // Fallback à notre implémentation personnalisée si disponible
+        window.go.main.App.BrowserOpenURL(url);
+      } else {
+        // Fallback vers la méthode standard si l'API Wails n'est pas disponible
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'ouverture du lien:", error);
+      // Tentative de fallback en cas d'erreur
+      try {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } catch (fallbackError) {
+        console.error('Erreur de fallback:', fallbackError);
+        alert("Impossible d'ouvrir le lien. URL: " + url);
+      }
+    }
+  };
 
   // Fonction pour rafraîchir les données du système
   const refreshSystemInfo = async () => {
@@ -135,12 +419,190 @@ export default function Home() {
     }
   };
 
-  // Fonction pour générer les commandes d'installation pour les applications sélectionnées
+  // Fonction pour vérifier la validité d'une commande d'installation
+  const validateCommand = async (command: string, appName: string) => {
+    console.log(`Validation de commande pour ${appName}: "${command}"`);
+    setValidationResults(prev => ({ ...prev, [appName]: 'loading' }));
+    setCommandValidating(true);
+
+    // Vérification préliminaire de base
+    if (!command || command.trim() === '') {
+      console.log(`Commande vide pour ${appName}`);
+      setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
+      setCommandValidating(false);
+      return;
+    }
+
+    try {
+      // Appeler l'API backend pour valider la commande
+      if (window.go?.main?.App?.ValidateCommand) {
+        const result = await window.go.main.App.ValidateCommand(command, appName);
+        console.log(`Résultat de validation backend pour ${appName}: ${result}`);
+
+        // Le backend renvoie une chaîne au format "status:message"
+        const [status, message] = result.split(':', 2);
+        console.log(`Validation pour ${appName}: ${status} - ${message}`);
+
+        switch (status) {
+          case 'success':
+            setValidationResults(prev => ({ ...prev, [appName]: 'success' }));
+            break;
+          case 'warning':
+            setValidationResults(prev => ({ ...prev, [appName]: 'warning' }));
+            break;
+          case 'error':
+            setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
+            break;
+          default:
+            // Si le statut n'est pas reconnu, on considère comme une erreur
+            console.log(`Statut non reconnu pour ${appName}: ${status}`);
+            setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
+        }
+      } else {
+        // Fallback à la validation côté client si l'API n'est pas disponible
+        console.log(
+          "L'API ValidateCommand n'est pas disponible, utilisation de la validation côté client"
+        );
+        validateClientSide(command, appName);
+      }
+    } catch (error) {
+      console.error(`Erreur lors de la validation de la commande pour ${appName}:`, error);
+      // En cas d'erreur, on considère que la commande est invalide
+      setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
+    } finally {
+      setCommandValidating(false);
+    }
+  };
+
+  // Fonction de validation côté client améliorée
+  const validateClientSide = (command: string, appName: string): void => {
+    console.log(`Validation côté client pour ${appName}: "${command}"`);
+
+    // Vérification basique
+    if (!command || command.trim() === '') {
+      console.log(`Commande vide détectée pour ${appName}`);
+      setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
+      return;
+    }
+
+    // Vérification de commandes incorrectes ou suspectes
+    const suspiciousPatterns = [
+      /rm\s+-rf/i, // commandes de suppression dangereuses
+      /\/dev\/null/i, // redirections vers dev/null
+      />\s*\/etc\//i, // écritures vers /etc
+      />\s*\/dev\//i, // écritures vers /dev
+      /sudo\s+rm/i, // sudo rm
+      /;\s*rm/i, // point-virgule suivi de rm
+      /\|\s*sh/i, // pipe vers shell
+      /eval/i, // eval
+      /[<>|;]$/, // terminaison par des caractères de redirection
+    ];
+
+    for (const pattern of suspiciousPatterns) {
+      if (pattern.test(command)) {
+        console.log(`Commande suspecte détectée pour ${appName}: ${pattern}`);
+        setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
+        return;
+      }
+    }
+
+    // Vérifier si la commande semble valide selon l'OS
+    const cmd = command.toLowerCase();
+
+    // Validation spécifique à l'OS
+    if (osInfo?.isMacOS) {
+      if (!cmd.includes('brew')) {
+        console.log(`Commande non-Homebrew détectée pour macOS: ${command}`);
+        setValidationResults(prev => ({ ...prev, [appName]: 'warning' }));
+        return;
+      }
+
+      // Vérifier si c'est une commande brew valide
+      if (!cmd.includes('install') && !cmd.includes('cask')) {
+        console.log(`Commande Homebrew invalide: ${command}`);
+        setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
+        return;
+      }
+    } else if (osInfo?.isWindows) {
+      if (!cmd.includes('winget')) {
+        console.log(`Commande non-Winget détectée pour Windows: ${command}`);
+        setValidationResults(prev => ({ ...prev, [appName]: 'warning' }));
+        return;
+      }
+
+      // Vérifier si c'est une commande winget valide
+      if (!cmd.includes('install')) {
+        console.log(`Commande Winget invalide: ${command}`);
+        setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
+        return;
+      }
+    } else {
+      // Linux
+      const packageManagers = ['apt', 'apt-get', 'dnf', 'yum', 'pacman', 'snap', 'flatpak'];
+      let hasValidPackageManager = false;
+
+      for (const pm of packageManagers) {
+        if (cmd.includes(pm)) {
+          hasValidPackageManager = true;
+          break;
+        }
+      }
+
+      if (!hasValidPackageManager) {
+        console.log(`Aucun gestionnaire de paquets Linux valide détecté: ${command}`);
+        setValidationResults(prev => ({ ...prev, [appName]: 'warning' }));
+        return;
+      }
+
+      // Vérifier si la commande contient "install"
+      if (!cmd.includes('install') && !cmd.match(/\s+-[iS]/)) {
+        console.log(`Commande Linux sans install détectée: ${command}`);
+        setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
+        return;
+      }
+    }
+
+    // Si la commande ne contient pas le nom de l'application ou un alias connu
+    const appNameLower = appName.toLowerCase();
+    if (!cmd.includes(appNameLower)) {
+      // Vérifier quelques alias courants
+      const aliases: Record<string, string[]> = {
+        vscode: ['visual-studio-code', 'code'],
+        chrome: ['google-chrome'],
+        firefox: ['mozilla-firefox'],
+        nodejs: ['node'],
+      };
+
+      let foundAlias = false;
+      const aliasesForApp = aliases[appNameLower];
+      if (aliasesForApp && aliasesForApp.length > 0) {
+        for (const alias of aliasesForApp) {
+          if (cmd.includes(alias)) {
+            foundAlias = true;
+            break;
+          }
+        }
+      }
+
+      if (!foundAlias) {
+        console.log(`Le nom de l'application n'est pas inclus dans la commande: ${command}`);
+        setValidationResults(prev => ({ ...prev, [appName]: 'warning' }));
+        return;
+      }
+    }
+
+    // Si toutes les vérifications passent
+    console.log(`Commande validée avec succès: ${command}`);
+    setValidationResults(prev => ({ ...prev, [appName]: 'success' }));
+  };
+
+  // Version améliorée de la fonction pour générer les commandes d'installation
   const generateInstallCommands = async () => {
     if (selectedApps.length === 0) return;
 
     setAppCommandsLoading(true);
     const commands: AppInstallCommand[] = [];
+    setValidationResults({});
 
     try {
       for (const appName of selectedApps) {
@@ -148,6 +610,7 @@ export default function Home() {
           const command = await window.go.main.App.GenerateInstallCommand(appName);
           const category = getCategoryForApp(appName);
 
+          // Ajouter la commande à la liste
           commands.push({
             appName,
             command,
@@ -155,8 +618,12 @@ export default function Home() {
             category,
             description: AppDescriptions[appName] || appName,
           });
+
+          // Valider la commande après l'avoir générée
+          validateCommand(command, appName);
         } catch (error) {
           console.error(`Erreur lors de la génération de la commande pour ${appName}:`, error);
+          setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
         }
       }
 
@@ -165,6 +632,9 @@ export default function Home() {
       console.error('Erreur lors de la génération des commandes:', error);
     } finally {
       setAppCommandsLoading(false);
+      setTimeout(() => {
+        setCommandValidating(false);
+      }, 1000); // Donner assez de temps pour que toutes les validations se terminent
     }
   };
 
@@ -203,42 +673,6 @@ export default function Home() {
         return <Zap className="h-4 w-4" />;
       case 'Serveurs':
         return <Server className="h-4 w-4" />;
-      default:
-        return <Package className="h-4 w-4" />;
-    }
-  };
-
-  // Fonction pour obtenir l'icône d'application
-  const getAppIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'git-branch':
-        return <GitBranch className="h-4 w-4" />;
-      case 'nodejs':
-        return <Code className="h-4 w-4" />;
-      case 'python':
-        return <Code className="h-4 w-4" />;
-      case 'code':
-        return <Code className="h-4 w-4" />;
-      case 'docker':
-        return <Layers className="h-4 w-4" />;
-      case 'chrome':
-        return <Globe className="h-4 w-4" />;
-      case 'firefox':
-        return <Globe className="h-4 w-4" />;
-      case 'terminal':
-        return <Terminal className="h-4 w-4" />;
-      case 'terminal-square':
-        return <Terminal className="h-4 w-4" />;
-      case 'linux':
-        return <Terminal className="h-4 w-4" />;
-      case 'search':
-        return <Zap className="h-4 w-4" />;
-      case 'server':
-        return <Server className="h-4 w-4" />;
-      case 'pen-tool':
-        return <Code className="h-4 w-4" />;
-      case 'package':
-        return <Package className="h-4 w-4" />;
       default:
         return <Package className="h-4 w-4" />;
     }
@@ -727,12 +1161,58 @@ export default function Home() {
                         {osInfo.isMacOS ? 'macOS' : osInfo.isWindows ? 'Windows' : 'Linux'}.
                       </p>
 
+                      {/* Navigation par catégories - version centrée et améliorée */}
+                      <div className="flex flex-wrap justify-center overflow-x-auto py-3 px-1 mb-6 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                        <Button
+                          variant={selectedCategory === 'Toutes' ? 'default' : 'ghost'}
+                          size="sm"
+                          className={`m-1 whitespace-nowrap rounded-full px-4 ${
+                            selectedCategory === 'Toutes'
+                              ? 'bg-primary/20 text-primary hover:bg-primary/30 shadow-sm shadow-primary/20'
+                              : 'hover:bg-background/80 hover:text-primary/90'
+                          }`}
+                          onClick={() => setSelectedCategory('Toutes')}
+                        >
+                          <Package className="h-4 w-4 mr-2" />
+                          Toutes
+                        </Button>
+
+                        {AppCategories.map(category => {
+                          // Ne montrer que les catégories qui ont des applications disponibles
+                          const hasApps = category.apps.some(app => availableApps.includes(app));
+                          if (!hasApps) return null;
+
+                          return (
+                            <Button
+                              key={category.name}
+                              variant={selectedCategory === category.name ? 'default' : 'ghost'}
+                              size="sm"
+                              className={`m-1 whitespace-nowrap rounded-full px-3 ${
+                                selectedCategory === category.name
+                                  ? 'bg-primary/20 text-primary hover:bg-primary/30 shadow-sm shadow-primary/20'
+                                  : 'hover:bg-background/80 hover:text-primary/90'
+                              }`}
+                              onClick={() => setSelectedCategory(category.name)}
+                            >
+                              <span className="mr-1.5">{getCategoryIcon(category.name)}</span>
+                              {category.name}
+                            </Button>
+                          );
+                        })}
+                      </div>
+
                       {/* Sélection d'applications par catégorie */}
                       <div className="space-y-6">
                         {AppCategories.map(category => {
+                          // Si une catégorie spécifique est sélectionnée et ce n'est pas celle-ci, passer
+                          if (selectedCategory !== 'Toutes' && selectedCategory !== category.name) {
+                            return null;
+                          }
+
                           const filteredApps = category.apps.filter(app =>
                             availableApps.includes(app)
                           );
+
                           if (filteredApps.length === 0) return null;
 
                           return (
@@ -765,6 +1245,20 @@ export default function Home() {
                             </div>
                           );
                         })}
+
+                        {/* Message si aucune application n'est disponible dans la catégorie sélectionnée */}
+                        {selectedCategory !== 'Toutes' &&
+                          !AppCategories.some(
+                            cat =>
+                              cat.name === selectedCategory &&
+                              cat.apps.some(app => availableApps.includes(app))
+                          ) && (
+                            <div className="p-4 rounded-lg bg-background/50 text-center">
+                              <p className="text-sm text-muted-foreground">
+                                Aucune application disponible dans la catégorie {selectedCategory}
+                              </p>
+                            </div>
+                          )}
                       </div>
 
                       {/* Actions */}
@@ -816,41 +1310,21 @@ export default function Home() {
                       {appCommands.length > 0 && (
                         <div className="mt-6 space-y-3">
                           <h3 className="text-sm font-medium">Commandes d&apos;installation</h3>
-                          <div className="space-y-3">
-                            {appCommands.map((app, index) => (
-                              <div
-                                key={index}
-                                className="rounded-lg p-3 bg-background/50 border border-primary/10 shadow-sm"
-                              >
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    {getAppIcon(app.icon)}
-                                    <span className="font-medium text-sm">{app.appName}</span>
-                                    <Badge
-                                      variant="outline"
-                                      className="bg-primary/5 text-xs font-normal"
-                                    >
-                                      {app.category}
-                                    </Badge>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    onClick={() => copyCommandToClipboard(app.command)}
-                                  >
-                                    <Copy className="h-3.5 w-3.5" />
-                                  </Button>
-                                </div>
-                                <div className="text-xs bg-background/80 rounded p-2 font-mono border border-primary/5 overflow-x-auto">
-                                  {app.command}
-                                </div>
-                              </div>
+                          <div>
+                            {appCommands.map(app => (
+                              <CommandCard
+                                key={app.appName}
+                                app={app}
+                                onValidate={validateCommand}
+                                validationResults={validationResults}
+                                commandValidating={commandValidating}
+                                onCopy={copyCommandToClipboard}
+                              />
                             ))}
                           </div>
                           <p className="text-xs text-muted-foreground mt-2">
-                            Vous pouvez copier ces commandes et les exécuter dans un terminal sur
-                            votre système.
+                            Vous pouvez modifier les commandes en cliquant sur l&apos;icône de
+                            modification (✏️), puis vérifier leur validité avec l&apos;icône (⚠️).
                           </p>
                         </div>
                       )}
@@ -892,30 +1366,25 @@ export default function Home() {
                             <div className="p-2 rounded-full bg-[#333333] shadow-[0_0_10px_rgba(255,255,255,0.15)]">
                               <FaApple className="h-6 w-6 text-white" />
                             </div>
-                            <h3 className="text-base font-semibold text-white">macOS</h3>
+                            <h3 className="text-base font-semibold text-white">
+                              {osLinks.macOS.name}
+                            </h3>
                           </div>
-                          <p className="text-xs text-white/90 mb-3">
-                            Système élégant et intuitif d&apos;Apple, parfaitement intégré à
-                            l&apos;écosystème Apple.
-                          </p>
+                          <p className="text-xs text-white/90 mb-3">{osLinks.macOS.description}</p>
                           <div className="flex gap-2">
-                            <a
-                              href="https://www.apple.com/fr/macos/sonoma/"
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              onClick={() => openLink(osLinks.macOS.official)}
                               className="flex-1 h-8 rounded-md bg-white/15 hover:bg-white/25 text-white text-xs border border-white/30 flex items-center justify-center z-[100]"
                             >
                               <ExternalLink className="h-3 w-3 mr-2" />
                               Site officiel
-                            </a>
-                            <a
-                              href="https://youtu.be/t7siwq7JkWM?si=Wk3xc3zNMPKAErkq"
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            </button>
+                            <button
+                              onClick={() => openLink(osLinks.macOS.video)}
                               className="h-8 w-8 rounded-md bg-white/15 hover:bg-white/25 text-white border border-white/30 flex items-center justify-center z-[100]"
                             >
                               <Play className="h-3 w-3" />
-                            </a>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -934,30 +1403,27 @@ export default function Home() {
                             <div className="p-2 rounded-full bg-[#0063b1] shadow-[0_0_10px_rgba(255,255,255,0.15)]">
                               <FaWindows className="h-6 w-6 text-white" />
                             </div>
-                            <h3 className="text-base font-semibold text-white">Windows</h3>
+                            <h3 className="text-base font-semibold text-white">
+                              {osLinks.Windows.name}
+                            </h3>
                           </div>
                           <p className="text-xs text-white/90 mb-3">
-                            Le système le plus utilisé au monde avec une large compatibilité
-                            matérielle et logicielle.
+                            {osLinks.Windows.description}
                           </p>
                           <div className="flex gap-2">
-                            <a
-                              href="https://www.microsoft.com/fr-fr/windows/features"
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              onClick={() => openLink(osLinks.Windows.official)}
                               className="flex-1 h-8 rounded-md bg-white/15 hover:bg-white/25 text-white text-xs border border-white/30 flex items-center justify-center z-[100]"
                             >
                               <ExternalLink className="h-3 w-3 mr-2" />
                               Site officiel
-                            </a>
-                            <a
-                              href="https://youtu.be/_85L5NWT87M?si=s3EzZs6oXqj6oiTv"
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            </button>
+                            <button
+                              onClick={() => openLink(osLinks.Windows.video)}
                               className="h-8 w-8 rounded-md bg-white/15 hover:bg-white/25 text-white border border-white/30 flex items-center justify-center z-[100]"
                             >
                               <Play className="h-3 w-3" />
-                            </a>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -976,30 +1442,25 @@ export default function Home() {
                             <div className="p-2 rounded-full bg-[#d35400] shadow-[0_0_12px_rgba(255,255,255,0.2)]">
                               <FaLinux className="h-6 w-6 text-white" />
                             </div>
-                            <h3 className="text-base font-semibold text-white">Linux</h3>
+                            <h3 className="text-base font-semibold text-white">
+                              {osLinks.Linux.name}
+                            </h3>
                           </div>
-                          <p className="text-xs text-white/90 mb-3">
-                            Système open source hautement personnalisable avec de nombreuses
-                            distributions.
-                          </p>
+                          <p className="text-xs text-white/90 mb-3">{osLinks.Linux.description}</p>
                           <div className="flex gap-2">
-                            <a
-                              href="https://www.kernel.org/"
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              onClick={() => openLink(osLinks.Linux.official)}
                               className="flex-1 h-8 rounded-md bg-white/15 hover:bg-white/25 text-white text-xs border border-white/30 flex items-center justify-center z-[100]"
                             >
                               <ExternalLink className="h-3 w-3 mr-2" />
                               Site officiel
-                            </a>
-                            <a
-                              href="https://youtu.be/xLhCOFWaY_M?si=vxcJIvG6mUjn8dal"
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            </button>
+                            <button
+                              onClick={() => openLink(osLinks.Linux.video)}
                               className="h-8 w-8 rounded-md bg-white/15 hover:bg-white/25 text-white border border-white/30 flex items-center justify-center z-[100]"
                             >
                               <Play className="h-3 w-3" />
-                            </a>
+                            </button>
                           </div>
                         </div>
                       </div>
