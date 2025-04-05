@@ -580,3 +580,217 @@ func getDiskTotalSpace() string {
 
 	return "Capacité disque inconnue"
 }
+
+// InstallPackageManager installe le gestionnaire de paquets approprié selon l'OS
+func (a *App) InstallPackageManager() (string, error) {
+	var cmd *exec.Cmd
+	var output []byte
+	var err error
+	var result string
+
+	switch runtime.GOOS {
+	case "darwin":
+		// Pour macOS, installer Homebrew
+		result = "Commande pour installer Homebrew: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+		// Détection si Homebrew est déjà installé
+		checkCmd := exec.Command("which", "brew")
+		if checkOutput, checkErr := checkCmd.Output(); checkErr == nil && len(checkOutput) > 0 {
+			result = "Homebrew est déjà installé sur votre système."
+		}
+	case "windows":
+		// Pour Windows, vérifier si winget est disponible
+		cmd = exec.Command("cmd", "/c", "winget -v")
+		if output, err = cmd.Output(); err == nil {
+			result = "Windows Package Manager (winget) est déjà installé: " + strings.TrimSpace(string(output))
+		} else {
+			result = "Pour installer Winget, ouvrez le Microsoft Store et recherchez 'App Installer'."
+		}
+	default:
+		// Pour Linux ou autres OS
+		if isAPTAvailable() {
+			result = "Gestionnaire de paquets APT détecté. Utilisez 'sudo apt update && sudo apt upgrade'."
+		} else if isDNFAvailable() {
+			result = "Gestionnaire de paquets DNF détecté. Utilisez 'sudo dnf update'."
+		} else if isPacmanAvailable() {
+			result = "Gestionnaire de paquets Pacman détecté. Utilisez 'sudo pacman -Syu'."
+		} else {
+			result = "Impossible de détecter automatiquement votre gestionnaire de paquets."
+		}
+	}
+
+	return result, nil
+}
+
+// isAPTAvailable vérifie si apt est disponible (Debian, Ubuntu, etc.)
+func isAPTAvailable() bool {
+	cmd := exec.Command("which", "apt")
+	if output, err := cmd.Output(); err == nil && len(output) > 0 {
+		return true
+	}
+	return false
+}
+
+// isDNFAvailable vérifie si dnf est disponible (Fedora, etc.)
+func isDNFAvailable() bool {
+	cmd := exec.Command("which", "dnf")
+	if output, err := cmd.Output(); err == nil && len(output) > 0 {
+		return true
+	}
+	return false
+}
+
+// isPacmanAvailable vérifie si pacman est disponible (Arch Linux, etc.)
+func isPacmanAvailable() bool {
+	cmd := exec.Command("which", "pacman")
+	if output, err := cmd.Output(); err == nil && len(output) > 0 {
+		return true
+	}
+	return false
+}
+
+// AppInstallCommand génère une commande d'installation pour une application donnée
+func (a *App) GenerateInstallCommand(appName string) (string, error) {
+	var command string
+	var err error
+
+	switch runtime.GOOS {
+	case "darwin":
+		// Vérifier si Homebrew est installé
+		checkCmd := exec.Command("which", "brew")
+		if checkOutput, checkErr := checkCmd.Output(); checkErr == nil && len(checkOutput) > 0 {
+			// Homebrew est installé, générer la commande brew
+			switch appName {
+			case "git":
+				command = "brew install git"
+			case "nodejs":
+				command = "brew install node"
+			case "python":
+				command = "brew install python"
+			case "vscode":
+				command = "brew install --cask visual-studio-code"
+			case "docker":
+				command = "brew install --cask docker"
+			case "chrome":
+				command = "brew install --cask google-chrome"
+			case "firefox":
+				command = "brew install --cask firefox"
+			default:
+				command = "brew install " + appName
+			}
+		} else {
+			// Homebrew n'est pas installé
+			return "", fmt.Errorf("Homebrew n'est pas installé sur votre système macOS")
+		}
+	case "windows":
+		// Vérifier si winget est disponible
+		checkCmd := exec.Command("cmd", "/c", "winget -v")
+		if checkOutput, checkErr := checkCmd.Output(); checkErr == nil && len(checkOutput) > 0 {
+			// Winget est disponible, générer la commande winget
+			switch appName {
+			case "git":
+				command = "winget install --id Git.Git"
+			case "nodejs":
+				command = "winget install --id OpenJS.NodeJS"
+			case "python":
+				command = "winget install --id Python.Python.3"
+			case "vscode":
+				command = "winget install --id Microsoft.VisualStudioCode"
+			case "docker":
+				command = "winget install --id Docker.DockerDesktop"
+			case "chrome":
+				command = "winget install --id Google.Chrome"
+			case "firefox":
+				command = "winget install --id Mozilla.Firefox"
+			default:
+				command = "winget install " + appName
+			}
+		} else {
+			// Winget n'est pas disponible
+			return "", fmt.Errorf("Windows Package Manager (winget) n'est pas disponible sur votre système Windows")
+		}
+	default:
+		// Linux ou autre OS
+		if isAPTAvailable() {
+			// Debian, Ubuntu, etc.
+			switch appName {
+			case "git":
+				command = "sudo apt update && sudo apt install -y git"
+			case "nodejs":
+				command = "sudo apt update && sudo apt install -y nodejs npm"
+			case "python":
+				command = "sudo apt update && sudo apt install -y python3 python3-pip"
+			case "vscode":
+				command = "sudo apt update && sudo apt install -y software-properties-common apt-transport-https wget && wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add - && sudo add-apt-repository \"deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main\" && sudo apt update && sudo apt install -y code"
+			case "docker":
+				command = "sudo apt update && sudo apt install -y docker.io docker-compose"
+			case "chrome":
+				command = "sudo apt update && sudo apt install -y wget && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo apt install -y ./google-chrome-stable_current_amd64.deb"
+			case "firefox":
+				command = "sudo apt update && sudo apt install -y firefox"
+			default:
+				command = "sudo apt update && sudo apt install -y " + appName
+			}
+		} else if isDNFAvailable() {
+			// Fedora, etc.
+			switch appName {
+			case "git":
+				command = "sudo dnf install -y git"
+			case "nodejs":
+				command = "sudo dnf install -y nodejs npm"
+			case "python":
+				command = "sudo dnf install -y python3 python3-pip"
+			case "vscode":
+				command = "sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc && sudo sh -c 'echo -e \"[code]\\nname=Visual Studio Code\\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\\nenabled=1\\ngpgcheck=1\\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc\" > /etc/yum.repos.d/vscode.repo' && sudo dnf install -y code"
+			case "docker":
+				command = "sudo dnf install -y docker docker-compose"
+			case "chrome":
+				command = "sudo dnf install -y fedora-workstation-repositories && sudo dnf config-manager --set-enabled google-chrome && sudo dnf install -y google-chrome-stable"
+			case "firefox":
+				command = "sudo dnf install -y firefox"
+			default:
+				command = "sudo dnf install -y " + appName
+			}
+		} else if isPacmanAvailable() {
+			// Arch Linux, etc.
+			switch appName {
+			case "git":
+				command = "sudo pacman -Sy git"
+			case "nodejs":
+				command = "sudo pacman -Sy nodejs npm"
+			case "python":
+				command = "sudo pacman -Sy python python-pip"
+			case "vscode":
+				command = "sudo pacman -Sy code"
+			case "docker":
+				command = "sudo pacman -Sy docker docker-compose"
+			case "chrome":
+				command = "sudo pacman -Sy chromium"
+			case "firefox":
+				command = "sudo pacman -Sy firefox"
+			default:
+				command = "sudo pacman -Sy " + appName
+			}
+		} else {
+			return "", fmt.Errorf("Aucun gestionnaire de paquets reconnu n'a été détecté sur votre système")
+		}
+	}
+
+	return command, err
+}
+
+// GetAvailableApps renvoie la liste des applications disponibles pour l'OS actuel
+func (a *App) GetAvailableApps() []string {
+	commonApps := []string{"git", "nodejs", "python", "vscode", "docker", "chrome", "firefox"}
+	
+	switch runtime.GOOS {
+	case "darwin":
+		macSpecificApps := []string{"iterm2", "alfred", "homebrew"}
+		return append(commonApps, macSpecificApps...)
+	case "windows":
+		windowsSpecificApps := []string{"powershell", "wsl", "terminal"}
+		return append(commonApps, windowsSpecificApps...)
+	default:
+		linuxSpecificApps := []string{"nginx", "apache2", "vim"}
+		return append(commonApps, linuxSpecificApps...)
+	}
+}

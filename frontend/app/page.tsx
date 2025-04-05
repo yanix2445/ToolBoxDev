@@ -1,12 +1,8 @@
 'use client';
 
-import { Terminal, Info, AlertCircle, Computer, Monitor, HardDrive } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { FaApple, FaWindows, FaLinux } from 'react-icons/fa';
-
-import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
+import { useEffect, useState } from "react";
+import { Greet } from "../wailsjs/go/main/App";
+import { OSInfo } from "./types";
 import {
   Card,
   CardContent,
@@ -14,12 +10,21 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '../components/ui/card';
-import { Separator } from '../components/ui/separator';
-import { Skeleton } from '../components/ui/skeleton';
-import { Greet } from '../wailsjs/go/main/App';
-
-import { OSInfo } from './types';
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { Separator } from "../components/ui/separator";
+import { Skeleton } from "../components/ui/skeleton";
+import {
+  Terminal,
+  Info,
+  AlertCircle,
+  Computer,
+  Monitor,
+  HardDrive,
+} from "lucide-react";
+import { FaApple, FaWindows, FaLinux } from "react-icons/fa";
 
 declare global {
   interface Window {
@@ -28,6 +33,9 @@ declare global {
         App: {
           GetOSInfo(): Promise<OSInfo>;
           Greet(name: string): Promise<string>;
+          InstallPackageManager(): Promise<string>;
+          GetAvailableApps(): Promise<string[]>;
+          GenerateInstallCommand(appName: string): Promise<string>;
         };
       };
     };
@@ -44,6 +52,14 @@ export default function Home() {
     total: '',
   });
   const [refreshInterval, setRefreshInterval] = useState<number | null>(null);
+  const [installerStatus, setInstallerStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [installerMessage, setInstallerMessage] = useState<string>("");
+  const [availableApps, setAvailableApps] = useState<string[]>([]);
+  const [selectedApps, setSelectedApps] = useState<string[]>([]);
+  const [appCommands, setAppCommands] = useState<AppInstallCommand[]>([]);
+  const [appCommandsLoading, setAppCommandsLoading] = useState<boolean>(false);
 
   // Fonction pour rafraîchir les données du système
   const refreshSystemInfo = async () => {
@@ -66,6 +82,170 @@ export default function Home() {
       setBackendAvailable(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fonction pour installer un gestionnaire de paquets selon l'OS
+  const installPackageManager = async () => {
+    setInstallerStatus("loading");
+    setInstallerMessage("Préparation de l'installation...");
+
+    try {
+      if (!osInfo) {
+        throw new Error("Informations système non disponibles");
+      }
+
+      if (window.go?.main?.App?.InstallPackageManager) {
+        const result = await window.go.main.App.InstallPackageManager();
+        setInstallerMessage(result);
+        setInstallerStatus("success");
+      } else {
+        throw new Error(
+          "La méthode InstallPackageManager n'est pas disponible"
+        );
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'installation:", error);
+      setInstallerMessage("Une erreur s'est produite pendant l'installation.");
+      setInstallerStatus("error");
+    }
+  };
+
+  // Fonction pour charger la liste des applications disponibles pour cet OS
+  const loadAvailableApps = async () => {
+    try {
+      if (window.go?.main?.App?.GetAvailableApps) {
+        const apps = await window.go.main.App.GetAvailableApps();
+        setAvailableApps(apps);
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors du chargement des applications disponibles:",
+        error
+      );
+    }
+  };
+
+  // Fonction pour basculer la sélection d'une application
+  const toggleAppSelection = (appName: string) => {
+    if (selectedApps.includes(appName)) {
+      setSelectedApps(selectedApps.filter((app) => app !== appName));
+    } else {
+      setSelectedApps([...selectedApps, appName]);
+    }
+  };
+
+  // Fonction pour générer les commandes d'installation pour les applications sélectionnées
+  const generateInstallCommands = async () => {
+    if (selectedApps.length === 0) return;
+
+    setAppCommandsLoading(true);
+    const commands: AppInstallCommand[] = [];
+
+    try {
+      for (const appName of selectedApps) {
+        try {
+          const command = await window.go.main.App.GenerateInstallCommand(
+            appName
+          );
+          const category = getCategoryForApp(appName);
+
+          commands.push({
+            appName,
+            command,
+            icon: AppIconMap[appName] || "package",
+            category,
+            description: AppDescriptions[appName] || appName,
+          });
+        } catch (error) {
+          console.error(
+            `Erreur lors de la génération de la commande pour ${appName}:`,
+            error
+          );
+        }
+      }
+
+      setAppCommands(commands);
+    } catch (error) {
+      console.error("Erreur lors de la génération des commandes:", error);
+    } finally {
+      setAppCommandsLoading(false);
+    }
+  };
+
+  // Fonction pour copier la commande dans le presse-papiers
+  const copyCommandToClipboard = (command: string) => {
+    navigator.clipboard
+      .writeText(command)
+      .then(() => {
+        console.log("Commande copiée dans le presse-papiers");
+      })
+      .catch((err) => {
+        console.error("Erreur lors de la copie de la commande:", err);
+      });
+  };
+
+  // Fonction pour obtenir la catégorie d'une application
+  const getCategoryForApp = (appName: string): string => {
+    for (const category of AppCategories) {
+      if (category.apps.includes(appName)) {
+        return category.name;
+      }
+    }
+    return "Autre";
+  };
+
+  // Fonction pour obtenir l'icône de catégorie
+  const getCategoryIcon = (categoryName: string) => {
+    switch (categoryName) {
+      case "Développement":
+        return <Code className="h-4 w-4" />;
+      case "Navigateurs":
+        return <Globe className="h-4 w-4" />;
+      case "Utilitaires":
+        return <Tool className="h-4 w-4" />;
+      case "Productivité":
+        return <Zap className="h-4 w-4" />;
+      case "Serveurs":
+        return <Server className="h-4 w-4" />;
+      default:
+        return <Package className="h-4 w-4" />;
+    }
+  };
+
+  // Fonction pour obtenir l'icône d'application
+  const getAppIcon = (iconName: string) => {
+    switch (iconName) {
+      case "git-branch":
+        return <GitBranch className="h-4 w-4" />;
+      case "nodejs":
+        return <Code className="h-4 w-4" />;
+      case "python":
+        return <Code className="h-4 w-4" />;
+      case "code":
+        return <Code className="h-4 w-4" />;
+      case "docker":
+        return <Layers className="h-4 w-4" />;
+      case "chrome":
+        return <Globe className="h-4 w-4" />;
+      case "firefox":
+        return <Globe className="h-4 w-4" />;
+      case "terminal":
+        return <Terminal className="h-4 w-4" />;
+      case "terminal-square":
+        return <Terminal className="h-4 w-4" />;
+      case "linux":
+        return <Terminal className="h-4 w-4" />;
+      case "search":
+        return <Zap className="h-4 w-4" />;
+      case "server":
+        return <Server className="h-4 w-4" />;
+      case "pen-tool":
+        return <Code className="h-4 w-4" />;
+      case "package":
+        return <Package className="h-4 w-4" />;
+      default:
+        return <Package className="h-4 w-4" />;
     }
   };
 
@@ -124,12 +304,20 @@ export default function Home() {
 
     setRefreshInterval(interval);
 
+    // Charger la liste des applications disponibles
+    loadAvailableApps();
+
     return () => {
       if (refreshInterval) {
         clearInterval(refreshInterval);
       }
     };
   }, []);
+
+  // Réinitialiser les commandes quand la sélection change
+  useEffect(() => {
+    setAppCommands([]);
+  }, [selectedApps]);
 
   // Fonction pour déterminer si un OS est l'OS actuel détecté
   const isDetectedOS = (osName: string): boolean => {
@@ -377,10 +565,11 @@ export default function Home() {
       <div className="w-full max-w-4xl space-y-6">
         {greeting && (
           <div className="relative overflow-hidden rounded-2xl backdrop-blur-sm border border-primary/20 bg-gradient-to-r from-background/80 to-background/40 shadow-lg group hover:shadow-primary/10 transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-70"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-40"></div>
             <div className="relative p-4 flex gap-3 items-start z-10">
-              <div className="bg-primary/10 p-2 rounded-full">
+              <div className="bg-primary/5 p-2 rounded-full icon-3d-metallic animated">
                 <Terminal className="h-5 w-5 text-primary" />
+                <div className="reflective-effect"></div>
               </div>
               <div>
                 <h3 className="font-semibold text-base">Bienvenue dans ToolBox</h3>
@@ -408,13 +597,14 @@ export default function Home() {
             {/* OS Détecté - Design moderne */}
             {isDetectedOS('macOS') && (
               <div className="relative overflow-hidden rounded-2xl shadow-lg group hover:shadow-xl transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-80"></div>
-                <div className="absolute -bottom-4 -right-4 w-40 h-40 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-2xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-40"></div>
+                <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-lg"></div>
 
                 <div className="relative z-10 grid grid-cols-12 gap-0 overflow-hidden">
                   <div className="col-span-12 sm:col-span-4 p-4 backdrop-blur-sm backdrop-saturate-150 flex items-center gap-4 bg-background/62">
-                    <div className="p-3 rounded-full bg-white/10 shadow-inner backdrop-blur-sm">
-                      <FaApple className="h-6 w-6 text-primary drop-shadow-md" />
+                    <div className="p-3 rounded-full bg-primary/15 shadow-lg backdrop-blur-none relative icon-3d-metallic animated ring-1 ring-primary/30">
+                      <FaApple className="h-8 w-8 text-primary icon-apple" />
+                      <div className="reflective-effect"></div>
                     </div>
                     <div>
                       <h3 className="font-bold text-base">macOS</h3>
@@ -456,15 +646,16 @@ export default function Home() {
               </div>
             )}
 
-            {isDetectedOS('Windows') && (
+            {isDetectedOS("Windows") && (
               <div className="relative overflow-hidden rounded-2xl shadow-lg group hover:shadow-xl transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-80"></div>
                 <div className="absolute -bottom-4 -right-4 w-40 h-40 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-2xl"></div>
 
                 <div className="relative z-10 grid grid-cols-12 gap-0 overflow-hidden">
                   <div className="col-span-12 sm:col-span-4 p-4 backdrop-blur-sm backdrop-saturate-150 flex items-center gap-4 bg-background/60">
-                    <div className="p-3 rounded-full bg-white/10 shadow-inner backdrop-blur-sm">
-                      <FaWindows className="h-6 w-6 text-primary drop-shadow-md" />
+                    <div className="p-3 rounded-full bg-primary/15 shadow-lg backdrop-blur-none relative icon-3d-metallic icon-silver animated ring-1 ring-primary/30">
+                      <FaWindows className="h-8 w-8 text-primary icon-windows" />
+                      <div className="reflective-effect"></div>
                     </div>
                     <div>
                       <h3 className="font-bold text-base">Windows</h3>
@@ -514,15 +705,16 @@ export default function Home() {
               </div>
             )}
 
-            {isDetectedOS('Linux') && (
+            {isDetectedOS("Linux") && (
               <div className="relative overflow-hidden rounded-2xl shadow-lg group hover:shadow-xl transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-80"></div>
                 <div className="absolute -bottom-4 -right-4 w-40 h-40 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-2xl"></div>
 
                 <div className="relative z-10 grid grid-cols-12 gap-0 overflow-hidden">
                   <div className="col-span-12 sm:col-span-4 p-4 backdrop-blur-sm backdrop-saturate-150 flex items-center gap-4 bg-background/60">
-                    <div className="p-3 rounded-full bg-white/10 shadow-inner backdrop-blur-sm">
-                      <FaLinux className="h-6 w-6 text-primary drop-shadow-md" />
+                    <div className="p-3 rounded-full bg-primary/20 shadow-lg backdrop-blur-none relative icon-3d-metallic icon-gold animated ring-1 ring-primary/40">
+                      <FaLinux className="h-8 w-8 text-primary/90 icon-linux" />
+                      <div className="reflective-effect"></div>
                     </div>
                     <div>
                       <h3 className="font-bold text-base">Linux</h3>
@@ -573,17 +765,18 @@ export default function Home() {
             )}
 
             {/* Détails techniques avec texture */}
-            <div className="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-background/95 via-background/85 to-background/75 backdrop-blur-md group hover:shadow-lg transition-all duration-700 transform hover:scale-[1.01] hover:translate-y-[-2px] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/4 before:via-primary/3 before:to-transparent before:opacity-60 before:z-[-1]">
-              <div className="absolute inset-0 bg-noise opacity-15 mix-blend-soft-light"></div>
-              <div className="absolute -bottom-10 -right-10 w-52 h-52 bg-gradient-to-br from-primary/10 via-primary/8 via-primary/6 via-primary/4 to-transparent rounded-full blur-3xl opacity-50 transition-opacity duration-700 group-hover:opacity-70"></div>
-              <div className="absolute -top-10 -left-10 w-52 h-52 bg-gradient-to-tr from-primary/10 via-primary/8 via-primary/6 via-primary/4 to-transparent rounded-full blur-3xl opacity-30 transition-opacity duration-700 group-hover:opacity-40"></div>
+            <div className="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-background/95 via-background/90 to-background/85 backdrop-blur-none group hover:shadow-lg transition-all duration-700 transform hover:scale-[1.01] hover:translate-y-[-2px] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-40 before:z-[-1]">
+              <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-30 transition-opacity duration-700 group-hover:opacity-40"></div>
+              <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-tr from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-20 transition-opacity duration-700 group-hover:opacity-30"></div>
               <div className="py-3 px-4 relative z-10 border-b border-primary/10 bg-gradient-to-r from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent flex items-center gap-2 shadow-sm">
-                <div className="p-2 rounded-full bg-gradient-to-br from-primary/20 via-primary/17 via-primary/15 via-primary/12 to-primary/5 shadow-md backdrop-blur-sm transform transition-transform duration-700 ease-in-out group-hover:scale-110 group-hover:rotate-3">
-                  <Monitor className="h-5 w-5 text-primary drop-shadow-lg" />
+                <div className="p-2 rounded-full bg-primary/20 shadow-lg backdrop-blur-none transform transition-transform duration-700 ease-in-out group-hover:scale-105 icon-3d-metallic animated ring-1 ring-primary/30">
+                  <Monitor className="h-6 w-6 text-primary" />
+                  <div className="reflective-effect"></div>
                 </div>
-                <h3 className="font-bold text-base bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/95 via-primary/90 via-primary/85 to-primary/80 drop-shadow-sm">
-                  Détails Techniques
-                </h3>
+                <h2 className="text-primary font-bold text-lg font-heading">
+                  Système
+                </h2>
               </div>
               <div className="p-4 relative z-10 bg-gradient-to-b from-transparent via-background/10 via-background/20 via-background/30 to-background/40">
                 {osInfo && (
@@ -635,9 +828,281 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Section d'installation du gestionnaire de paquets */}
+            <div className="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-background/95 via-background/90 to-background/85 backdrop-blur-none group hover:shadow-lg transition-all duration-700 transform hover:scale-[1.01] hover:translate-y-[-2px] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-40 before:z-[-1]">
+              <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-30 transition-opacity duration-700 group-hover:opacity-40"></div>
+              <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-tr from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-20 transition-opacity duration-700 group-hover:opacity-30"></div>
+              <div className="py-3 px-4 relative z-10 border-b border-primary/10 bg-gradient-to-r from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent flex items-center gap-2 shadow-sm">
+                <div className="p-2 rounded-full bg-primary/20 shadow-lg backdrop-blur-none transform transition-transform duration-700 ease-in-out group-hover:scale-105 icon-3d-metallic animated ring-1 ring-primary/30">
+                  <Download className="h-6 w-6 text-primary" />
+                  <div className="reflective-effect"></div>
+                </div>
+                <h2 className="text-primary font-bold text-lg font-heading">
+                  Gestionnaire de paquets
+                </h2>
+              </div>
+              <div className="p-4 relative z-10 bg-gradient-to-b from-transparent via-background/10 via-background/20 via-background/30 to-background/40">
+                <div className="space-y-4">
+                  {osInfo && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {osInfo.isMacOS
+                          ? "Installez Homebrew, le gestionnaire de paquets pour macOS."
+                          : osInfo.isWindows
+                          ? "Installez Winget, le gestionnaire de paquets pour Windows."
+                          : "Utilisez le gestionnaire de paquets pour votre distribution Linux."}
+                      </p>
+                      <div className="rounded-xl p-4 bg-gradient-to-br from-background/85 to-background/65 shadow-md backdrop-blur-sm border border-primary/10 overflow-hidden">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div className="space-y-2">
+                            <h3 className="font-semibold text-primary">
+                              {osInfo.isMacOS
+                                ? "Homebrew"
+                                : osInfo.isWindows
+                                ? "Windows Package Manager (winget)"
+                                : "Gestionnaire de paquets Linux"}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {osInfo.isMacOS
+                                ? "Le gestionnaire de paquets manquant pour macOS"
+                                : osInfo.isWindows
+                                ? "Le gestionnaire de paquets officiel pour Windows"
+                                : "Mettez à jour vos dépôts et paquets"}
+                            </p>
+                            {installerStatus !== "idle" && (
+                              <div
+                                className={`mt-2 p-3 rounded-lg ${
+                                  installerStatus === "error"
+                                    ? "bg-destructive/10 text-destructive"
+                                    : installerStatus === "success"
+                                    ? "bg-green-500/10 text-green-500"
+                                    : "bg-primary/10 text-primary animate-pulse"
+                                }`}
+                              >
+                                <p className="text-sm font-medium">
+                                  {installerMessage}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            onClick={installPackageManager}
+                            disabled={installerStatus === "loading"}
+                            className="h-9 px-4 rounded-xl bg-primary/80 hover:bg-primary/90 backdrop-blur-sm shadow-md hover:shadow transform transition-all duration-300 hover:scale-[1.02] relative overflow-hidden group"
+                          >
+                            {installerStatus === "loading" ? (
+                              <>
+                                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                Installation...
+                              </>
+                            ) : (
+                              <>
+                                <div className="absolute inset-0 bg-gradient-to-tr from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <Download className="h-4 w-4 mr-2 relative z-10" />
+                                <span className="relative z-10">
+                                  {installerStatus === "success"
+                                    ? "Instructions affichées"
+                                    : "Installer"}
+                                </span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Section d'installation des applications */}
+            <div className="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-background/95 via-background/90 to-background/85 backdrop-blur-none group hover:shadow-lg transition-all duration-700 transform hover:scale-[1.01] hover:translate-y-[-2px] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-40 before:z-[-1]">
+              <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-30 transition-opacity duration-700 group-hover:opacity-40"></div>
+              <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-tr from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-20 transition-opacity duration-700 group-hover:opacity-30"></div>
+              <div className="py-3 px-4 relative z-10 border-b border-primary/10 bg-gradient-to-r from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent flex items-center gap-2 shadow-sm">
+                <div className="p-2 rounded-full bg-primary/20 shadow-lg backdrop-blur-none transform transition-transform duration-700 ease-in-out group-hover:scale-105 icon-3d-metallic animated ring-1 ring-primary/30">
+                  <Package className="h-6 w-6 text-primary" />
+                  <div className="reflective-effect"></div>
+                </div>
+                <h2 className="text-primary font-bold text-lg font-heading">
+                  Installer des applications
+                </h2>
+              </div>
+              <div className="p-4 relative z-10 bg-gradient-to-b from-transparent via-background/10 via-background/20 via-background/30 to-background/40">
+                <div className="space-y-4">
+                  {osInfo && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Sélectionnez les applications que vous souhaitez
+                        installer sur votre système{" "}
+                        {osInfo.isMacOS
+                          ? "macOS"
+                          : osInfo.isWindows
+                          ? "Windows"
+                          : "Linux"}
+                        .
+                      </p>
+
+                      {/* Sélection d'applications par catégorie */}
+                      <div className="space-y-6">
+                        {AppCategories.map((category) => {
+                          const filteredApps = category.apps.filter((app) =>
+                            availableApps.includes(app)
+                          );
+                          if (filteredApps.length === 0) return null;
+
+                          return (
+                            <div key={category.name} className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                {getCategoryIcon(category.name)}
+                                <h3 className="text-sm font-semibold">
+                                  {category.name}
+                                </h3>
+                              </div>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                {filteredApps.map((app) => (
+                                  <Button
+                                    key={app}
+                                    variant={
+                                      selectedApps.includes(app)
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    size="sm"
+                                    className={`h-auto py-2 px-3 justify-start gap-2 text-left ${
+                                      selectedApps.includes(app)
+                                        ? "bg-primary/20 text-primary border-primary/30"
+                                        : "hover:bg-primary/10 hover:text-primary/90"
+                                    }`}
+                                    onClick={() => toggleAppSelection(app)}
+                                  >
+                                    {getAppIcon(AppIconMap[app] || "package")}
+                                    <span className="flex-1 truncate">
+                                      {app}
+                                    </span>
+                                    {selectedApps.includes(app) && (
+                                      <Check className="h-3 w-3 ml-1 flex-shrink-0" />
+                                    )}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="mt-4 flex justify-between items-center">
+                        <div>
+                          {selectedApps.length > 0 && (
+                            <Badge
+                              variant="outline"
+                              className="bg-primary/10 text-primary"
+                            >
+                              {selectedApps.length} application
+                              {selectedApps.length > 1 ? "s" : ""} sélectionnée
+                              {selectedApps.length > 1 ? "s" : ""}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          {selectedApps.length > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-8"
+                              onClick={() => setSelectedApps([])}
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              Effacer
+                            </Button>
+                          )}
+                          <Button
+                            onClick={generateInstallCommands}
+                            disabled={
+                              selectedApps.length === 0 || appCommandsLoading
+                            }
+                            className="h-8 px-3 rounded-xl bg-primary/80 hover:bg-primary/90 backdrop-blur-sm shadow-md hover:shadow transform transition-all duration-300 hover:scale-[1.02] text-xs relative overflow-hidden group"
+                          >
+                            {appCommandsLoading ? (
+                              <>
+                                <div className="h-3 w-3 mr-2 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                Générer les commandes
+                              </>
+                            ) : (
+                              <>
+                                <div className="absolute inset-0 bg-gradient-to-tr from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <Terminal className="h-3 w-3 mr-1 relative z-10" />
+                                <span className="relative z-10">
+                                  Générer les commandes
+                                </span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Affichage des commandes générées */}
+                      {appCommands.length > 0 && (
+                        <div className="mt-6 space-y-3">
+                          <h3 className="text-sm font-medium">
+                            Commandes d&apos;installation
+                          </h3>
+                          <div className="space-y-3">
+                            {appCommands.map((app, index) => (
+                              <div
+                                key={index}
+                                className="rounded-lg p-3 bg-background/50 border border-primary/10 shadow-sm"
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    {getAppIcon(app.icon)}
+                                    <span className="font-medium text-sm">
+                                      {app.appName}
+                                    </span>
+                                    <Badge
+                                      variant="outline"
+                                      className="bg-primary/5 text-xs font-normal"
+                                    >
+                                      {app.category}
+                                    </Badge>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0"
+                                    onClick={() =>
+                                      copyCommandToClipboard(app.command)
+                                    }
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                                <div className="text-xs bg-background/80 rounded p-2 font-mono border border-primary/5 overflow-x-auto">
+                                  {app.command}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Vous pouvez copier ces commandes et les exécuter
+                            dans un terminal sur votre système.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Autres OS en version épurée */}
             <div className="flex gap-3">
-              {!isDetectedOS('macOS') && (
+              {!isDetectedOS("macOS") && (
                 <div className="flex-1 relative overflow-hidden rounded-2xl group transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
                   <div className="absolute inset-0 bg-gradient-to-br from-background/90 to-background/70 backdrop-blur-sm"></div>
                   <div className="relative p-4 flex flex-col items-center justify-center gap-2 z-10">
@@ -648,7 +1113,7 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              {!isDetectedOS('Windows') && (
+              {!isDetectedOS("Windows") && (
                 <div className="flex-1 relative overflow-hidden rounded-2xl group transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
                   <div className="absolute inset-0 bg-gradient-to-br from-background/90 to-background/70 backdrop-blur-sm"></div>
                   <div className="relative p-4 flex flex-col items-center justify-center gap-2 z-10">
@@ -659,7 +1124,7 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              {!isDetectedOS('Linux') && (
+              {!isDetectedOS("Linux") && (
                 <div className="flex-1 relative overflow-hidden rounded-2xl group transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
                   <div className="absolute inset-0 bg-gradient-to-br from-background/90 to-background/70 backdrop-blur-sm"></div>
                   <div className="relative p-4 flex flex-col items-center justify-center gap-2 z-10">
@@ -689,13 +1154,13 @@ export default function Home() {
         )}
 
         {/* Barre d'actions en bas avec effet glassmorphism */}
-        <div className="relative overflow-hidden rounded-2xl backdrop-blur-md border border-primary/10 bg-gradient-to-r from-background/60 to-background/40 shadow-lg">
-          <div className="absolute inset-0 bg-noise opacity-20 mix-blend-soft-light"></div>
+        <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-r from-background/70 to-background/60 shadow-md">
+          <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
           <div className="relative z-10 py-3 px-4 flex justify-between items-center">
             <Button
               variant="default"
               size="sm"
-              className="h-9 px-4 rounded-xl bg-primary/80 hover:bg-primary/90 backdrop-blur-sm shadow-md hover:shadow transform transition-all duration-300 hover:scale-[1.02]"
+              className="h-9 px-4 rounded-xl bg-primary/80 hover:bg-primary/90 backdrop-blur-sm shadow-md hover:shadow transform transition-all duration-300 hover:scale-[1.02] relative overflow-hidden group"
               onClick={refreshSystemInfo}
               disabled={loading}
             >
@@ -706,8 +1171,10 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <HardDrive className="h-4 w-4 mr-2" />
-                  Rafraîchir
+                  <div className="absolute inset-0 bg-gradient-to-tr from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <HardDrive className="h-4 w-4 mr-2 relative z-10" />
+                  <span className="relative z-10">Rafraîchir</span>
                 </>
               )}
             </Button>

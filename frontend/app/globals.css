@@ -285,3 +285,6 @@
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
+/* Import des styles métalliques */
+@import "./styles/metallic-icons.css";

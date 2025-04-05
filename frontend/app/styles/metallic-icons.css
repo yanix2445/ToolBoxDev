@@ -1,0 +1,223 @@
+/* Styles pour effets 3D métalliques avancés sur les icônes */
+
+:root {
+  --gold-primary: 45, 100%;
+  --gold-light: 50, 100%;
+  --gold-dark: 40, 70%;
+  --silver-primary: 0, 0%;
+  --silver-light: 0, 100%;
+  --silver-dark: 0, 50%;
+  --copper-primary: 20, 50%;
+  --copper-light: 25, 80%;
+  --copper-dark: 15, 30%;
+  --metal-shine-opacity: 0.7;
+  --metal-shadow-opacity: 0.4;
+  --metal-highlight-opacity: 0.6;
+  --metal-depth: 4px;
+  --metal-blur: 0.5px;
+}
+
+.icon-3d-metallic {
+  position: relative;
+  filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.2));
+  transform-style: preserve-3d;
+  perspective: 800px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 10;
+}
+
+.icon-3d-metallic::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: radial-gradient(
+    circle at 30% 30%,
+    hsla(0, 0%, 100%, 0.8) 0%,
+    hsla(0, 0%, 90%, 0.6) 20%,
+    hsla(0, 0%, 80%, 0.3) 40%,
+    hsla(0, 0%, 60%, 0.15) 60%,
+    hsla(0, 0%, 40%, 0.05) 80%,
+    hsla(0, 0%, 20%, 0) 100%
+  );
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(var(--metal-blur));
+  opacity: var(--metal-shine-opacity);
+  transform: translateZ(calc(-1 * var(--metal-depth)));
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, var(--metal-shadow-opacity)),
+    inset 0 -4px 8px -3px rgba(255, 255, 255, var(--metal-highlight-opacity)),
+    inset 0 4px 6px -2px rgba(255, 255, 255, 0.2);
+}
+
+.icon-3d-metallic::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 255, 255, 0.3) 25%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 51%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 50%;
+  z-index: 2;
+  filter: blur(0);
+  transform: translateZ(1px);
+  opacity: 0.5;
+}
+
+.icon-3d-metallic:hover {
+  transform: translateY(-2px) rotateX(10deg) rotateY(10deg) scale(1.03);
+  filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+.icon-3d-metallic:hover::before {
+  filter: blur(calc(var(--metal-blur) * 1.2));
+  opacity: 0.8;
+  box-shadow: 0 6px 16px -5px rgba(0, 0, 0, calc(var(--metal-shadow-opacity) *
+            1.1)),
+    inset 0 -5px 10px -4px rgba(255, 255, 255, var(--metal-highlight-opacity)),
+    inset 0 5px 8px -3px rgba(255, 255, 255, 0.3);
+}
+
+/* Variations métalliques - Gold */
+.icon-gold {
+  --metal-hue-light: var(--gold-light);
+  --metal-hue-primary: var(--gold-primary);
+  --metal-hue-dark: var(--gold-dark);
+  color: transparent !important;
+}
+
+.icon-gold::before {
+  background: radial-gradient(
+    circle at 30% 30%,
+    hsla(var(--metal-hue-light), 90%, 0.8) 0%,
+    hsla(var(--metal-hue-primary), 50%, 0.7) 20%,
+    hsla(var(--metal-hue-primary), 45%, 0.4) 40%,
+    hsla(var(--metal-hue-dark), 40%, 0.2) 60%,
+    hsla(var(--metal-hue-dark), 35%, 0.1) 70%,
+    hsla(var(--metal-hue-dark), 30%, 0) 100%
+  );
+  box-shadow: 0 4px 12px -4px hsla(var(--metal-hue-dark), 30%, var(--metal-shadow-opacity)),
+    inset 0 -4px 8px -3px
+      hsla(var(--metal-hue-light), 90%, var(--metal-highlight-opacity)),
+    inset 0 4px 6px -2px hsla(var(--metal-hue-light), 80%, 0.3);
+  transform: translateZ(calc(-1 * var(--metal-depth)));
+}
+
+.icon-gold svg path {
+  fill: url(#gold-gradient) !important;
+  filter: drop-shadow(0px 1px 1px hsla(var(--metal-hue-dark), 40%, 0.3));
+}
+
+/* Variations métalliques - Silver */
+.icon-silver {
+  --metal-hue-light: var(--silver-light);
+  --metal-hue-primary: var(--silver-primary);
+  --metal-hue-dark: var(--silver-dark);
+  color: transparent !important;
+}
+
+.icon-silver::before {
+  background: radial-gradient(
+    circle at 30% 30%,
+    hsla(var(--metal-hue-light), 90%, 0.8) 0%,
+    hsla(var(--metal-hue-primary), 92%, 0.7) 20%,
+    hsla(var(--metal-hue-primary), 80%, 0.4) 40%,
+    hsla(var(--metal-hue-primary), 70%, 0.2) 60%,
+    hsla(var(--metal-hue-primary), 60%, 0.1) 70%,
+    hsla(var(--metal-hue-dark), 50%, 0) 100%
+  );
+  box-shadow: 0 4px 12px -4px hsla(var(--metal-hue-dark), 30%, var(--metal-shadow-opacity)),
+    inset 0 -4px 8px -3px
+      hsla(var(--metal-hue-light), 100%, var(--metal-highlight-opacity)),
+    inset 0 4px 6px -2px hsla(var(--metal-hue-light), 90%, 0.3);
+}
+
+.icon-silver svg path {
+  fill: url(#silver-gradient) !important;
+  filter: drop-shadow(0px 1px 1px hsla(var(--metal-hue-dark), 40%, 0.3));
+}
+
+/* Variations métalliques - Copper */
+.icon-copper {
+  --metal-hue-light: var(--copper-light);
+  --metal-hue-primary: var(--copper-primary);
+  --metal-hue-dark: var(--copper-dark);
+  color: transparent !important;
+}
+
+.icon-copper::before {
+  background: radial-gradient(
+    circle at 30% 30%,
+    hsla(var(--metal-hue-light), 90%, 0.8) 0%,
+    hsla(var(--metal-hue-light), 65%, 0.7) 20%,
+    hsla(var(--metal-hue-primary), 45%, 0.4) 40%,
+    hsla(var(--metal-hue-dark), 40%, 0.2) 60%,
+    hsla(var(--metal-hue-dark), 35%, 0.1) 70%,
+    hsla(var(--metal-hue-dark), 30%, 0) 100%
+  );
+  box-shadow: 0 4px 12px -4px hsla(var(--metal-hue-dark), 40%, var(--metal-shadow-opacity)),
+    inset 0 -4px 8px -3px
+      hsla(var(--metal-hue-light), 80%, var(--metal-highlight-opacity)),
+    inset 0 4px 6px -2px hsla(var(--metal-hue-light), 70%, 0.3);
+}
+
+.icon-copper svg path {
+  fill: url(#copper-gradient) !important;
+  filter: drop-shadow(0px 1px 1px hsla(var(--metal-hue-dark), 40%, 0.3));
+}
+
+/* Style pour les icônes OS */
+.icon-apple svg path {
+  fill: url(#icon-gradient-apple) !important;
+  stroke: rgba(0, 0, 0, 0.05);
+  stroke-width: 0.5px;
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.2));
+}
+
+.icon-windows svg path {
+  fill: url(#icon-gradient-windows) !important;
+  stroke: rgba(0, 0, 0, 0.05);
+  stroke-width: 0.5px;
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.2));
+}
+
+.icon-linux svg path {
+  fill: url(#icon-gradient-linux) !important;
+  stroke: rgba(0, 0, 0, 0.05);
+  stroke-width: 0.5px;
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.2));
+}
+
+/* Définition des gradients SVG pour les icônes */
+.gradient-definitions {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Effets de réflexion */
+.reflective-effect {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0) 40%
+  );
+  border-radius: 50%;
+  z-index: 3;
+  opacity: 0.5;
+  transform: translateZ(1px);
+  pointer-events: none;
+  mix-blend-mode: normal;
+}
+
+.icon-3d-metallic.animated::before {
+  background-size: 100% 100%;
+}
