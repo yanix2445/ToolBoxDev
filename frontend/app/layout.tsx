@@ -25,94 +25,66 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           <svg className="gradient-definitions">
             <defs>
-              <linearGradient
-                id="gold-gradient"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="100%"
-              >
-                <stop offset="0%" stopColor="#FFF7D6" />
-                <stop offset="25%" stopColor="#FFD700" />
-                <stop offset="50%" stopColor="#FFBC00" />
-                <stop offset="75%" stopColor="#E6A800" />
-                <stop offset="100%" stopColor="#CC9200" />
+              {/* Définition des dégradés pour les effets métalliques */}
+              <linearGradient id="gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f5d57a" />
+                <stop offset="25%" stopColor="#e0a33b" />
+                <stop offset="50%" stopColor="#fbe9a0" />
+                <stop offset="75%" stopColor="#be7f16" />
+                <stop offset="100%" stopColor="#d6a849" />
               </linearGradient>
 
-              <linearGradient
-                id="silver-gradient"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="100%"
-              >
-                <stop offset="0%" stopColor="#FFFFFF" />
-                <stop offset="25%" stopColor="#E6E6E6" />
-                <stop offset="50%" stopColor="#CCCCCC" />
-                <stop offset="75%" stopColor="#B3B3B3" />
-                <stop offset="100%" stopColor="#999999" />
+              {/* Silver Gradient */}
+              <linearGradient id="silver-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f2f2f2" />
+                <stop offset="25%" stopColor="#a8a8a8" />
+                <stop offset="50%" stopColor="#ffffff" />
+                <stop offset="75%" stopColor="#8c8c8c" />
+                <stop offset="100%" stopColor="#c8c8c8" />
               </linearGradient>
 
-              <linearGradient
-                id="copper-gradient"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="100%"
-              >
-                <stop offset="0%" stopColor="#FFD7BE" />
-                <stop offset="25%" stopColor="#E09C7E" />
-                <stop offset="50%" stopColor="#B87333" />
-                <stop offset="75%" stopColor="#9E5828" />
-                <stop offset="100%" stopColor="#8A4513" />
+              {/* Copper Gradient */}
+              <linearGradient id="copper-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#db9562" />
+                <stop offset="25%" stopColor="#9e5627" />
+                <stop offset="50%" stopColor="#e6b188" />
+                <stop offset="75%" stopColor="#8c480f" />
+                <stop offset="100%" stopColor="#b76d3a" />
               </linearGradient>
 
-              <linearGradient
-                id="icon-gradient-apple"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="100%"
-              >
-                <stop offset="0%" stopColor="#555555" />
-                <stop offset="50%" stopColor="#333333" />
-                <stop offset="100%" stopColor="#222222" />
+              {/* Apple Icon Gradient */}
+              <linearGradient id="icon-gradient-apple" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#666666" />
+                <stop offset="25%" stopColor="#444444" />
+                <stop offset="50%" stopColor="#999999" />
+                <stop offset="75%" stopColor="#333333" />
+                <stop offset="100%" stopColor="#777777" />
               </linearGradient>
 
-              <linearGradient
-                id="icon-gradient-windows"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="100%"
-              >
-                <stop offset="0%" stopColor="#00ADEF" />
-                <stop offset="50%" stopColor="#0078D7" />
-                <stop offset="100%" stopColor="#0063B1" />
+              {/* Windows Icon Gradient */}
+              <linearGradient id="icon-gradient-windows" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0078d7" />
+                <stop offset="25%" stopColor="#005a9e" />
+                <stop offset="50%" stopColor="#00a2ff" />
+                <stop offset="75%" stopColor="#00417a" />
+                <stop offset="100%" stopColor="#0063b1" />
               </linearGradient>
 
-              <linearGradient
-                id="icon-gradient-linux"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="100%"
-              >
-                <stop offset="0%" stopColor="#FFDD57" />
-                <stop offset="50%" stopColor="#FCC624" />
-                <stop offset="100%" stopColor="#E0A800" />
+              {/* Linux Icon Gradient */}
+              <linearGradient id="icon-gradient-linux" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e67e22" />
+                <stop offset="25%" stopColor="#d35400" />
+                <stop offset="50%" stopColor="#f39c12" />
+                <stop offset="75%" stopColor="#af5800" />
+                <stop offset="100%" stopColor="#e78d4a" />
               </linearGradient>
 
-              <linearGradient
-                id="icon-gradient"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="100%"
-              >
-                <stop offset="0%" stopColor="#FFFFFF" />
-                <stop offset="50%" stopColor="#CCCCCC" />
-                <stop offset="100%" stopColor="#999999" />
+              {/* Icons Gradient */}
+              <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="hsl(var(--primary))" />
+                <stop offset="30%" stopColor="hsl(var(--primary) / 0.7)" />
+                <stop offset="70%" stopColor="hsl(var(--primary) / 0.9)" />
+                <stop offset="100%" stopColor="hsl(var(--primary) / 0.8)" />
               </linearGradient>
             </defs>
           </svg>
