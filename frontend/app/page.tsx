@@ -428,6 +428,53 @@ export default function Home() {
       return;
     }
 
+    // Traiter les commandes multi-lignes pour les groupes
+    if (
+      appName.startsWith('Groupe ') ||
+      appName === 'Applications Cask' ||
+      appName === 'Formules Homebrew' ||
+      appName === 'Applications Standard'
+    ) {
+      // Pour les commandes multi-lignes, vérifier chaque ligne non-commentaire
+      const commandLines = command.includes('\n')
+        ? command.split('\n').filter(line => !line.trim().startsWith('#'))
+        : [command];
+
+      // Vérifier si au moins une ligne contient un gestionnaire de paquets valide
+      const hasValidPackageManager = commandLines.some(
+        line =>
+          line.includes('brew ') ||
+          line.includes('winget ') ||
+          line.includes('apt ') ||
+          line.includes('npm ') ||
+          line.includes('pip ')
+      );
+
+      if (hasValidPackageManager) {
+        const successDetails: ValidationDetails = {
+          level: 'success',
+          message: 'Installation groupée valide.',
+          suggestion:
+            'Vous pouvez exécuter cette commande en bloc pour installer plusieurs applications à la fois.',
+          explanation:
+            'Cette commande installera simultanément toutes les applications listées, ce qui est plus rapide que des installations individuelles.',
+        };
+        setValidationDetails(prev => ({ ...prev, [appName]: successDetails }));
+        setValidationResults(prev => ({ ...prev, [appName]: 'success' }));
+        return;
+      } else {
+        const errorDetails: ValidationDetails = {
+          level: 'error-manager',
+          message: 'Gestionnaire de paquets non reconnu dans la commande groupée.',
+          suggestion: `Utilisez un gestionnaire compatible avec votre système (brew, winget, apt, etc.)`,
+          explanation: 'La commande groupée doit utiliser un gestionnaire de paquets valide.',
+        };
+        setValidationDetails(prev => ({ ...prev, [appName]: errorDetails }));
+        setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
+        return;
+      }
+    }
+
     // Déterminer les alias officiels pour cette application
     const aliases: Record<string, string[]> = {
       vscode: ['visual-studio-code', 'code', 'vs-code', 'vscodium', 'visualstudio'],
@@ -1224,7 +1271,203 @@ export default function Home() {
                       {/* Affichage des commandes générées */}
                       {appCommands.length > 0 && (
                         <div className="mt-6 space-y-3">
-                          <h3 className="text-sm font-medium">Commandes d&apos;installation</h3>
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-sm font-medium">Commandes d&apos;installation</h3>
+
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  // Regrouper les commandes par gestionnaire de paquets
+                                  // et séparer les commandes avec --cask des commandes standards
+
+                                  // Détection du gestionnaire et séparation des commandes
+                                  let packageManager = 'unknown';
+                                  const standardPackages: string[] = [];
+                                  const caskPackages: string[] = [];
+
+                                  // Analyser chaque commande pour détecter le type
+                                  for (const app of appCommands) {
+                                    const command = app.command.trim();
+
+                                    // Détection du gestionnaire de paquets
+                                    if (command.startsWith('brew ')) {
+                                      packageManager = 'brew';
+
+                                      // Détecter si c'est une commande cask ou standard
+                                      if (command.includes('--cask')) {
+                                        // Extraire le nom de l'application après --cask
+                                        const parts = command.split('--cask');
+                                        if (parts.length > 1 && parts[1]) {
+                                          const appName = parts[1].trim();
+                                          caskPackages.push(appName);
+                                        } else {
+                                          caskPackages.push(app.appName);
+                                        }
+                                      } else {
+                                        // C'est une formule standard
+                                        const parts = command.split('install');
+                                        if (parts.length > 1 && parts[1]) {
+                                          const appName = parts[1].trim();
+                                          standardPackages.push(appName);
+                                        } else {
+                                          standardPackages.push(app.appName);
+                                        }
+                                      }
+                                    } else {
+                                      // Pour les autres gestionnaires que brew
+                                      if (command.startsWith('winget ')) packageManager = 'winget';
+                                      else if (command.startsWith('apt ')) packageManager = 'apt';
+                                      else if (command.startsWith('apt-get '))
+                                        packageManager = 'apt-get';
+                                      else if (command.startsWith('pacman '))
+                                        packageManager = 'pacman';
+                                      else if (command.startsWith('dnf ')) packageManager = 'dnf';
+                                      else if (command.startsWith('yum ')) packageManager = 'yum';
+                                      else if (command.startsWith('npm ')) packageManager = 'npm';
+                                      else if (command.startsWith('pip ')) packageManager = 'pip';
+
+                                      // Extraire le nom de l'application après install
+                                      const parts = command.split('install');
+                                      if (parts.length > 1 && parts[1]) {
+                                        const appName = parts[1].trim();
+                                        standardPackages.push(appName);
+                                      } else {
+                                        standardPackages.push(app.appName);
+                                      }
+                                    }
+                                  }
+
+                                  // Si aucun gestionnaire n'a été détecté, utiliser celui correspondant à l'OS
+                                  if (packageManager === 'unknown') {
+                                    if (osInfo?.platform === 'darwin') packageManager = 'brew';
+                                    else if (osInfo?.platform === 'windows')
+                                      packageManager = 'winget';
+                                    else if (osInfo?.platform === 'linux') packageManager = 'apt';
+                                  }
+
+                                  // Créer les commandes regroupées
+                                  const newCommands: AppInstallCommand[] = [];
+
+                                  // Commande pour les applications cask (macOS uniquement, avec brew)
+                                  if (packageManager === 'brew' && caskPackages.length > 0) {
+                                    newCommands.push({
+                                      appName: 'Applications Cask',
+                                      command: `brew install --cask ${caskPackages.join(' ')}`,
+                                      icon: 'package',
+                                      category: 'Groupe',
+                                      description: `Installation de ${caskPackages.length} applications GUI via Homebrew Cask`,
+                                    });
+                                  }
+
+                                  // Commande pour les formules standard
+                                  if (standardPackages.length > 0) {
+                                    // Supprimer les commentaires comme demandé
+                                    newCommands.push({
+                                      appName:
+                                        packageManager === 'brew'
+                                          ? 'Formules Homebrew'
+                                          : 'Applications Standard',
+                                      command: `${packageManager} install ${standardPackages.join(' ')}`,
+                                      icon: 'package',
+                                      category: 'Groupe',
+                                      description: `Installation de ${standardPackages.length} applications via ${packageManager}`,
+                                    });
+                                  }
+
+                                  if (newCommands.length > 0) {
+                                    setAppCommands(newCommands);
+
+                                    // Valider les nouvelles commandes avec la même rigueur
+                                    newCommands.forEach(app => {
+                                      // Pour les commandes multi-lignes (commandes regroupées),
+                                      // extraire chaque ligne réelle de commande (sans commentaires)
+                                      if (app.command.includes('\n')) {
+                                        const commandLines = app.command.split('\n');
+                                        // Filtrer les lignes qui ne sont pas des commentaires
+                                        const actualCommandLines = commandLines.filter(
+                                          line => !line.trim().startsWith('#')
+                                        );
+
+                                        if (actualCommandLines.length > 0) {
+                                          // Joindre toutes les lignes de commande réelles
+                                          const actualCommand = actualCommandLines.join('\n');
+
+                                          // Vérifier si la commande contient au moins un gestionnaire de paquets valide
+                                          const hasPackageManager =
+                                            actualCommand.includes('brew ') ||
+                                            actualCommand.includes('winget ') ||
+                                            actualCommand.includes('apt ') ||
+                                            actualCommand.includes('npm ') ||
+                                            actualCommand.includes('pip ');
+
+                                          if (hasPackageManager) {
+                                            // Utiliser la même fonction de validation que pour les commandes individuelles
+                                            validateCommand(actualCommand, app.appName);
+                                          } else {
+                                            // Signaler l'erreur avec le même format que pour les commandes individuelles
+                                            setValidationResults(prev => ({
+                                              ...prev,
+                                              [app.appName]: 'error',
+                                            }));
+                                            setValidationDetails(prev => ({
+                                              ...prev,
+                                              [app.appName]: {
+                                                level: 'error-manager',
+                                                message:
+                                                  'Aucun gestionnaire de paquets reconnu dans la commande groupée.',
+                                                suggestion: `Utilisez un gestionnaire compatible avec votre système (${osInfo?.platform === 'darwin' ? 'brew' : osInfo?.platform === 'windows' ? 'winget' : 'apt'})`,
+                                                explanation:
+                                                  'La commande groupée doit utiliser un gestionnaire de paquets valide.',
+                                              },
+                                            }));
+                                          }
+                                        } else {
+                                          // Cas où il n'y a que des commentaires
+                                          setValidationResults(prev => ({
+                                            ...prev,
+                                            [app.appName]: 'error',
+                                          }));
+                                          setValidationDetails(prev => ({
+                                            ...prev,
+                                            [app.appName]: {
+                                              level: 'error-syntax',
+                                              message:
+                                                'La commande ne contient que des commentaires.',
+                                              suggestion:
+                                                'Ajoutez une ligne de commande exécutable.',
+                                              explanation:
+                                                'Une commande groupée doit contenir au moins une instruction exécutable.',
+                                            },
+                                          }));
+                                        }
+                                      } else {
+                                        // Pour les commandes sur une seule ligne, utiliser la validation standard
+                                        validateCommand(app.command, app.appName);
+                                      }
+                                    });
+                                  }
+                                }}
+                                className="text-xs h-7"
+                                title="Regrouper les commandes par gestionnaire de paquets en séparant les applications Cask et standard"
+                              >
+                                <Layers className="h-3 w-3 mr-1" />
+                                Regrouper
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => generateInstallCommands()}
+                                className="text-xs h-7"
+                                title="Régénérer les commandes individuelles"
+                              >
+                                <Package className="h-3 w-3 mr-1" />
+                                Individuelles
+                              </Button>
+                            </div>
+                          </div>
+
                           <div>
                             {appCommands.map((app, index) => (
                               <div
@@ -1325,7 +1568,18 @@ export default function Home() {
                                       className="text-sm break-all pr-2 bg-transparent w-full resize-none outline-none border-none focus:ring-0 font-mono text-foreground"
                                       value={app.command}
                                       onChange={e => {
-                                        // Mettre à jour la commande dans l'état
+                                        // Vérifier si c'est une commande groupée (désactiver les modifications)
+                                        if (
+                                          app.appName === 'Applications Cask' ||
+                                          app.appName === 'Formules Homebrew' ||
+                                          app.appName === 'Applications Standard' ||
+                                          app.appName.startsWith('Groupe ')
+                                        ) {
+                                          // Ne pas autoriser les modifications pour les commandes groupées
+                                          return;
+                                        }
+
+                                        // Mettre à jour la commande dans l'état seulement pour les commandes individuelles
                                         const newCommands = [...appCommands];
                                         const commandIndex = newCommands.findIndex(
                                           cmd => cmd.appName === app.appName
@@ -1347,6 +1601,12 @@ export default function Home() {
                                       }}
                                       rows={1}
                                       style={{ height: 'auto', minHeight: '1.5rem' }}
+                                      readOnly={
+                                        app.appName === 'Applications Cask' ||
+                                        app.appName === 'Formules Homebrew' ||
+                                        app.appName === 'Applications Standard' ||
+                                        app.appName.startsWith('Groupe ')
+                                      }
                                       onInput={e => {
                                         const target = e.target as HTMLTextAreaElement;
                                         target.style.height = 'auto';
@@ -1358,7 +1618,17 @@ export default function Home() {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => {
-                                          // Régénérer la commande originale
+                                          // Ne pas autoriser la réinitialisation pour les commandes groupées
+                                          if (
+                                            app.appName === 'Applications Cask' ||
+                                            app.appName === 'Formules Homebrew' ||
+                                            app.appName === 'Applications Standard' ||
+                                            app.appName.startsWith('Groupe ')
+                                          ) {
+                                            return;
+                                          }
+
+                                          // Régénérer la commande originale uniquement pour les commandes individuelles
                                           generateCommandForApp(app.appName)
                                             .then((originalCommand: string) => {
                                               const newCommands = [...appCommands];
