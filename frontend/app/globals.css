@@ -287,4 +287,17 @@
 }
 
 /* Import des styles métalliques */
-@import "./styles/metallic-icons.css";
+@import './styles/metallic-icons.css';
+
+/* Style pour la boîte de commande */
+.command-card {
+  @apply rounded-md p-3 bg-[hsl(var(--command-bg))] font-mono text-sm;
+}
+
+.command-success {
+  @apply bg-[hsl(var(--command-success-bg))] text-[hsl(var(--command-success))];
+}
+
+.command-error {
+  @apply bg-[hsl(var(--command-error-bg))] text-[hsl(var(--command-error))];
+}

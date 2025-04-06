@@ -2,11 +2,11 @@
 
 import {
   Terminal,
-  Info,
-  AlertCircle,
-  Computer,
+  Info as _Info,
+  AlertCircle as _AlertCircle,
+  Computer as _Computer,
   Monitor,
-  HardDrive,
+  HardDrive as _HardDrive,
   Download,
   Code,
   Package,
@@ -19,19 +19,32 @@ import {
   Zap,
   Server,
   X,
-  ExternalLink,
-  Play,
-  Pen,
+  ExternalLink as _ExternalLink,
+  Play as _Play,
+  Pen as _Pen,
+  Loader,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { FaApple, FaWindows, FaLinux } from 'react-icons/fa';
 
+import { Icon } from '../components/Icon';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { Card, CardHeader, CardContent } from '../components/ui/card';
+import {
+  Card as _Card,
+  CardHeader as _CardHeader,
+  CardContent as _CardContent,
+} from '../components/ui/card';
+import _ValidationStatusIndicator from '../components/ValidationStatusIndicator';
+import { validateCommandWithDetails, convertToSimpleResult } from '../lib/validationUtils';
 import { Greet } from '../wailsjs/wailsjs/go/main/App';
 
 import { OSInfo, AppCategories, AppIconMap, AppDescriptions, AppInstallCommand } from './types';
+import type { ValidationLevel, ValidationDetails } from './types';
 
 declare global {
   interface Window {
@@ -90,179 +103,101 @@ const getAppIcon = (iconName: string) => {
   }
 };
 
-// Remplacement du composant AppCommandItem complexe par une approche plus simple
-function CommandCard({
-  app,
-  onValidate,
-  validationResults,
-  commandValidating,
-  onCopy,
-}: {
+// Interface pour le CommandCard actuel (pour compatibilité)
+interface CommandCardProps {
   app: AppInstallCommand;
   onValidate: (command: string, appName: string) => void;
-  validationResults: Record<string, 'loading' | 'success' | 'warning' | 'error' | null>;
+  validationResults: Record<string, 'success' | 'warning' | 'error' | 'loading' | null>;
   commandValidating: boolean;
   onCopy: (command: string) => void;
-}) {
-  // État local pour la commande éditée et le mode d'édition
-  const [command, setCommand] = useState(app.command);
-  const [isEditing, setIsEditing] = useState(false);
+}
 
-  // Validation directe de la commande actuelle
-  const handleValidate = () => {
-    onValidate(command, app.appName);
-  };
-
-  // Fonction pour copier la commande
-  const handleCopy = () => {
-    onCopy(command);
-  };
-
-  // Rendu du composant
+// Composant CommandCard pour compatibilité avec le code existant
+const _CommandCard: React.FC<CommandCardProps> = ({
+  app,
+  onValidate: _onValidate,
+  validationResults,
+  commandValidating,
+  onCopy: _onCopy,
+}) => {
   return (
-    <Card className="mb-4 overflow-hidden">
-      <CardHeader className="p-3 pb-2 flex-row justify-between items-center space-y-0 gap-2 bg-background/95">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md flex items-center justify-center bg-background/80 p-1 border border-primary/5">
-            {getAppIcon(app.icon || 'package')}
+    <div
+      className={`p-4 border rounded-lg mb-4 transition-colors duration-300 ${
+        validationResults[app.appName] === 'success'
+          ? 'border-green-500 bg-green-500/10'
+          : validationResults[app.appName] === 'warning'
+            ? 'border-yellow-500 bg-yellow-500/10'
+            : validationResults[app.appName] === 'error'
+              ? 'border-red-500 bg-red-500/10'
+              : 'border-gray-700'
+      }`}
+    >
+      <div className="flex justify-between items-start">
+        <div className="flex items-center space-x-2">
+          <span
+            className={`inline-block p-2 rounded-md ${
+              validationResults[app.appName] === 'success'
+                ? 'bg-green-500/20'
+                : validationResults[app.appName] === 'warning'
+                  ? 'bg-yellow-500/20'
+                  : validationResults[app.appName] === 'error'
+                    ? 'bg-red-500/20'
+                    : 'bg-gray-700/20'
+            }`}
+          >
+            {app.icon && (
+              <Icon
+                icon={app.icon}
+                className={`h-5 w-5 ${
+                  validationResults[app.appName] === 'success'
+                    ? 'text-green-500'
+                    : validationResults[app.appName] === 'warning'
+                      ? 'text-yellow-500'
+                      : validationResults[app.appName] === 'error'
+                        ? 'text-red-500'
+                        : 'text-gray-400'
+                }`}
+              />
+            )}
+          </span>
+          <div>
+            <h3 className="font-medium">{app.appName}</h3>
+            <p className="text-sm text-gray-400">{app.description}</p>
           </div>
-          <span className="font-medium text-sm">{app.appName}</span>
-          <Badge variant="outline" className="bg-primary/5 text-xs font-normal">
-            {app.category}
-          </Badge>
-
-          {validationResults && validationResults[app.appName] === 'loading' && (
-            <div className="h-3 w-3 animate-spin rounded-full border border-primary border-t-transparent ml-1" />
-          )}
-          {validationResults && validationResults[app.appName] === 'success' && (
-            <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
-              <Check className="h-3 w-3 mr-1" />
-              Valide
-            </Badge>
-          )}
-          {validationResults && validationResults[app.appName] === 'warning' && (
-            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 text-xs">
-              <AlertCircle className="h-3 w-3 mr-1" />À vérifier
-            </Badge>
-          )}
-          {validationResults && validationResults[app.appName] === 'error' && (
-            <Badge variant="outline" className="bg-destructive/10 text-destructive text-xs">
-              <X className="h-3 w-3 mr-1" />
-              Erreur
-            </Badge>
-          )}
         </div>
 
-        <div className="flex gap-1">
+        <div className="flex items-center space-x-2">
+          {commandValidating ? (
+            <Loader className="h-5 w-5 animate-spin text-blue-500" />
+          ) : validationResults[app.appName] === 'success' ? (
+            <CheckCircle className="h-5 w-5 text-green-500" />
+          ) : validationResults[app.appName] === 'warning' ? (
+            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+          ) : validationResults[app.appName] === 'error' ? (
+            <XCircle className="h-5 w-5 text-red-500" />
+          ) : (
+            <div className="h-5 w-5" />
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <div className="p-3 bg-gray-800 rounded-md flex justify-between items-center">
+          <code className="text-sm break-all pr-2">{app.command}</code>
           <Button
             variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0"
-            onClick={handleCopy}
+            size="icon"
+            onClick={() => _onCopy(app.command)}
+            aria-label="Copier la commande"
             title="Copier la commande"
           >
-            <Copy className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0"
-            onClick={handleValidate}
-            disabled={commandValidating}
-            title="Vérifier la commande"
-          >
-            <AlertCircle className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0"
-            onClick={() => setIsEditing(!isEditing)}
-            title={isEditing ? "Terminer l'édition" : 'Modifier la commande'}
-          >
-            {isEditing ? (
-              <Check className="h-3.5 w-3.5 text-green-500" />
-            ) : (
-              <Pen className="h-3.5 w-3.5" />
-            )}
+            <Copy className="h-4 w-4" />
           </Button>
         </div>
-      </CardHeader>
-
-      <CardContent className="p-3 pt-2 bg-background/80">
-        {isEditing ? (
-          <div className="space-y-3">
-            <textarea
-              className="w-full text-xs bg-background/90 rounded p-2 font-mono border border-primary/20 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 min-h-[80px] outline-none resize-y"
-              value={command}
-              onChange={e => setCommand(e.target.value)}
-              autoFocus
-            />
-            <div className="flex justify-between">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs text-yellow-600 border-yellow-500/20 hover:bg-yellow-500/10"
-                onClick={handleValidate}
-                disabled={commandValidating}
-              >
-                {commandValidating ? (
-                  <div className="h-3 w-3 mr-1 animate-spin rounded-full border border-current border-t-transparent" />
-                ) : (
-                  <AlertCircle className="h-3.5 w-3.5 mr-1" />
-                )}
-                Vérifier
-              </Button>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 text-xs"
-                  onClick={() => {
-                    setCommand(app.command);
-                    setIsEditing(false);
-                  }}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="h-7 text-xs bg-primary/80 hover:bg-primary/90"
-                  onClick={() => setIsEditing(false)}
-                >
-                  Appliquer
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div
-            className="text-xs bg-background/80 rounded p-2 font-mono border border-primary/5 overflow-x-auto cursor-pointer"
-            onClick={() => setIsEditing(true)}
-          >
-            {command}
-          </div>
-        )}
-      </CardContent>
-
-      {validationResults && validationResults[app.appName] === 'warning' && (
-        <div className="p-3 text-xs bg-yellow-500/5 border-t border-yellow-500/10 text-yellow-600">
-          <p>Cette commande pourrait nécessiter des ajustements selon votre système.</p>
-          <p className="mt-1">Vérifiez que le gestionnaire de paquets est bien installé.</p>
-        </div>
-      )}
-      {validationResults && validationResults[app.appName] === 'error' && (
-        <div className="p-3 text-xs bg-destructive/5 border-t border-destructive/10 text-destructive">
-          <p>La commande semble incorrecte ou n&apos;a pas pu être générée correctement.</p>
-          <p className="mt-1">
-            Vous pouvez consulter la documentation officielle pour {app.appName}.
-          </p>
-        </div>
-      )}
-    </Card>
+      </div>
+    </div>
   );
-}
+};
 
 export default function Home() {
   const [greeting, setGreeting] = useState<string>('');
@@ -283,13 +218,14 @@ export default function Home() {
   const [appCommands, setAppCommands] = useState<AppInstallCommand[]>([]);
   const [appCommandsLoading, setAppCommandsLoading] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('Toutes');
-  const [commandValidating, setCommandValidating] = useState<boolean>(false);
+  const [_commandValidating, setCommandValidating] = useState<boolean>(false);
   const [validationResults, setValidationResults] = useState<{
     [key: string]: 'success' | 'warning' | 'error' | 'loading' | null;
   }>({});
+  const [validationDetails, setValidationDetails] = useState<Record<string, ValidationDetails>>({});
 
   // Ajouter cette section pour centraliser les liens des OS
-  const osLinks = {
+  const _osLinks = {
     macOS: {
       official: 'https://www.apple.com/macos/',
       video: 'https://www.youtube.com/watch?v=KQVFhUU1KzM',
@@ -323,7 +259,7 @@ export default function Home() {
   };
 
   // Fonction pour ouvrir un lien en sécurité avec l'API Wails
-  const openLink = (url: string) => {
+  const _openLink = (url: string) => {
     try {
       // Utiliser l'API Wails pour ouvrir des URL via window.runtime
       if (window.runtime && typeof window.runtime.BrowserOpenURL === 'function') {
@@ -351,7 +287,7 @@ export default function Home() {
   };
 
   // Fonction pour rafraîchir les données du système
-  const refreshSystemInfo = async () => {
+  const _refreshSystemInfo = async () => {
     setLoading(true);
     try {
       if (window.go?.main?.App?.GetOSInfo) {
@@ -480,120 +416,54 @@ export default function Home() {
 
     // Vérification basique
     if (!command || command.trim() === '') {
-      console.log(`Commande vide détectée pour ${appName}`);
+      const errorDetails: ValidationDetails = {
+        level: 'error-syntax',
+        message: 'La commande est vide.',
+        suggestion: "Entrez une commande d'installation valide.",
+        explanation:
+          "Une commande d'installation doit contenir au minimum un gestionnaire de paquets, une action d'installation et le nom de l'application.",
+      };
+      setValidationDetails(prev => ({ ...prev, [appName]: errorDetails }));
       setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
       return;
     }
 
-    // Vérification de commandes incorrectes ou suspectes
-    const suspiciousPatterns = [
-      /rm\s+-rf/i, // commandes de suppression dangereuses
-      /\/dev\/null/i, // redirections vers dev/null
-      />\s*\/etc\//i, // écritures vers /etc
-      />\s*\/dev\//i, // écritures vers /dev
-      /sudo\s+rm/i, // sudo rm
-      /;\s*rm/i, // point-virgule suivi de rm
-      /\|\s*sh/i, // pipe vers shell
-      /eval/i, // eval
-      /[<>|;]$/, // terminaison par des caractères de redirection
-    ];
+    // Déterminer les alias officiels pour cette application
+    const aliases: Record<string, string[]> = {
+      vscode: ['visual-studio-code', 'code', 'vs-code', 'vscodium', 'visualstudio'],
+      chrome: ['google-chrome', 'chrome', 'chromium', 'googlechrome'],
+      firefox: ['mozilla-firefox', 'firefox', 'mozilla', 'mozilla/firefox'],
+      nodejs: ['node', 'node.js', 'node-js', 'npm'],
+      git: ['git-scm', 'git', 'gitscm', 'git-client'],
+      python: ['python3', 'python', 'py', 'py3', 'python-3'],
+      docker: ['docker-desktop', 'docker', 'dockerdesktop', 'docker-engine'],
+    };
 
-    for (const pattern of suspiciousPatterns) {
-      if (pattern.test(command)) {
-        console.log(`Commande suspecte détectée pour ${appName}: ${pattern}`);
-        setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
-        return;
+    // Obtenir la plateforme actuelle
+    let currentPlatform = '';
+    if (osInfo?.platform) {
+      currentPlatform = osInfo.platform;
+    } else if (osInfo) {
+      if (osInfo.isMacOS) {
+        currentPlatform = 'darwin';
+      } else if (osInfo.isWindows) {
+        currentPlatform = 'windows';
+      } else {
+        currentPlatform = 'linux';
       }
     }
 
-    // Vérifier si la commande semble valide selon l'OS
-    const cmd = command.toLowerCase();
+    // Utiliser la validation détaillée
+    const details = validateCommandWithDetails(
+      command,
+      appName,
+      aliases[appName.toLowerCase()] || [],
+      currentPlatform
+    );
 
-    // Validation spécifique à l'OS
-    if (osInfo?.isMacOS) {
-      if (!cmd.includes('brew')) {
-        console.log(`Commande non-Homebrew détectée pour macOS: ${command}`);
-        setValidationResults(prev => ({ ...prev, [appName]: 'warning' }));
-        return;
-      }
-
-      // Vérifier si c'est une commande brew valide
-      if (!cmd.includes('install') && !cmd.includes('cask')) {
-        console.log(`Commande Homebrew invalide: ${command}`);
-        setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
-        return;
-      }
-    } else if (osInfo?.isWindows) {
-      if (!cmd.includes('winget')) {
-        console.log(`Commande non-Winget détectée pour Windows: ${command}`);
-        setValidationResults(prev => ({ ...prev, [appName]: 'warning' }));
-        return;
-      }
-
-      // Vérifier si c'est une commande winget valide
-      if (!cmd.includes('install')) {
-        console.log(`Commande Winget invalide: ${command}`);
-        setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
-        return;
-      }
-    } else {
-      // Linux
-      const packageManagers = ['apt', 'apt-get', 'dnf', 'yum', 'pacman', 'snap', 'flatpak'];
-      let hasValidPackageManager = false;
-
-      for (const pm of packageManagers) {
-        if (cmd.includes(pm)) {
-          hasValidPackageManager = true;
-          break;
-        }
-      }
-
-      if (!hasValidPackageManager) {
-        console.log(`Aucun gestionnaire de paquets Linux valide détecté: ${command}`);
-        setValidationResults(prev => ({ ...prev, [appName]: 'warning' }));
-        return;
-      }
-
-      // Vérifier si la commande contient "install"
-      if (!cmd.includes('install') && !cmd.match(/\s+-[iS]/)) {
-        console.log(`Commande Linux sans install détectée: ${command}`);
-        setValidationResults(prev => ({ ...prev, [appName]: 'error' }));
-        return;
-      }
-    }
-
-    // Si la commande ne contient pas le nom de l'application ou un alias connu
-    const appNameLower = appName.toLowerCase();
-    if (!cmd.includes(appNameLower)) {
-      // Vérifier quelques alias courants
-      const aliases: Record<string, string[]> = {
-        vscode: ['visual-studio-code', 'code'],
-        chrome: ['google-chrome'],
-        firefox: ['mozilla-firefox'],
-        nodejs: ['node'],
-      };
-
-      let foundAlias = false;
-      const aliasesForApp = aliases[appNameLower];
-      if (aliasesForApp && aliasesForApp.length > 0) {
-        for (const alias of aliasesForApp) {
-          if (cmd.includes(alias)) {
-            foundAlias = true;
-            break;
-          }
-        }
-      }
-
-      if (!foundAlias) {
-        console.log(`Le nom de l'application n'est pas inclus dans la commande: ${command}`);
-        setValidationResults(prev => ({ ...prev, [appName]: 'warning' }));
-        return;
-      }
-    }
-
-    // Si toutes les vérifications passent
-    console.log(`Commande validée avec succès: ${command}`);
-    setValidationResults(prev => ({ ...prev, [appName]: 'success' }));
+    // Mettre à jour les deux états (détails et résultat simplifié pour compatibilité)
+    setValidationDetails(prev => ({ ...prev, [appName]: details }));
+    setValidationResults(prev => ({ ...prev, [appName]: convertToSimpleResult(details) }));
   };
 
   // Version améliorée de la fonction pour générer les commandes d'installation
@@ -678,6 +548,21 @@ export default function Home() {
     }
   };
 
+  // Fonction pour générer une commande pour une application spécifique
+  const generateCommandForApp = async (appName: string): Promise<string> => {
+    try {
+      // Utiliser l'API backend si disponible
+      if (window.go?.main?.App?.GenerateInstallCommand) {
+        return await window.go.main.App.GenerateInstallCommand(appName);
+      }
+      // Fallback vers une commande générique si l'API n'est pas disponible
+      return `echo "Commande pour installer ${appName}"`;
+    } catch (error) {
+      console.error(`Erreur lors de la génération de la commande pour ${appName}:`, error);
+      return `echo "Erreur: Impossible de générer la commande pour ${appName}"`;
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -752,6 +637,15 @@ export default function Home() {
   const isDetectedOS = (osName: string): boolean => {
     if (!osInfo) return false;
 
+    if (osInfo.platform) {
+      const platform = osInfo.platform.toLowerCase();
+      if (osName === 'macOS' && platform === 'darwin') return true;
+      if (osName === 'Windows' && platform === 'windows') return true;
+      if (osName === 'Linux' && platform === 'linux') return true;
+      return false;
+    }
+
+    // Fallback pour la compatibilité avec les anciennes versions
     if (osName === 'macOS' && osInfo.isMacOS) return true;
     if (osName === 'Windows' && osInfo.isWindows) return true;
     if (
@@ -780,6 +674,27 @@ export default function Home() {
       return usedPercentage;
     } catch (e) {
       return 0;
+    }
+  };
+
+  // Fonction utilitaire pour obtenir la couleur de fond selon le niveau de validation
+  const _getValidationBackgroundColor = (level: ValidationLevel): string => {
+    switch (level) {
+      case 'success':
+      case 'success-with-options':
+        return 'bg-green-500/20';
+      case 'warning-options':
+      case 'warning-syntax':
+        return 'bg-yellow-500/20';
+      case 'error-name':
+      case 'error-manager':
+      case 'error-security':
+      case 'error-syntax':
+        return 'bg-red-500/20';
+      case 'loading':
+        return 'bg-blue-500/20';
+      default:
+        return 'bg-gray-700/20';
     }
   };
 
@@ -1311,20 +1226,243 @@ export default function Home() {
                         <div className="mt-6 space-y-3">
                           <h3 className="text-sm font-medium">Commandes d&apos;installation</h3>
                           <div>
-                            {appCommands.map(app => (
-                              <CommandCard
-                                key={app.appName}
-                                app={app}
-                                onValidate={validateCommand}
-                                validationResults={validationResults}
-                                commandValidating={commandValidating}
-                                onCopy={copyCommandToClipboard}
-                              />
+                            {appCommands.map((app, index) => (
+                              <div
+                                key={`app-cmd-${index}-${app.appName}`}
+                                className={`p-4 border rounded-lg mb-4 transition-colors duration-300 ${
+                                  validationResults[app.appName] === 'success'
+                                    ? 'border-emerald-500/50 bg-emerald-500/5'
+                                    : validationResults[app.appName] === 'warning'
+                                      ? 'border-amber-500/50 bg-amber-500/5'
+                                      : validationResults[app.appName] === 'error'
+                                        ? 'border-rose-500/50 bg-rose-500/5'
+                                        : 'border-primary/20 bg-background/50'
+                                }`}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div className="flex items-center space-x-2">
+                                    <span
+                                      className={`inline-block p-2 rounded-md ${
+                                        validationResults[app.appName] === 'success'
+                                          ? 'bg-emerald-500/20'
+                                          : validationResults[app.appName] === 'warning'
+                                            ? 'bg-amber-500/20'
+                                            : validationResults[app.appName] === 'error'
+                                              ? 'bg-rose-500/20'
+                                              : 'bg-primary/10'
+                                      }`}
+                                    >
+                                      {app.icon && (
+                                        <Icon
+                                          icon={app.icon}
+                                          className={`h-5 w-5 ${
+                                            validationResults[app.appName] === 'success'
+                                              ? 'text-emerald-500'
+                                              : validationResults[app.appName] === 'warning'
+                                                ? 'text-amber-500'
+                                                : validationResults[app.appName] === 'error'
+                                                  ? 'text-rose-500'
+                                                  : 'text-primary/70'
+                                          }`}
+                                        />
+                                      )}
+                                    </span>
+                                    <div>
+                                      <h3 className="font-medium">{app.appName}</h3>
+                                      <p className="text-sm text-muted-foreground">
+                                        {app.description}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Affichage de l'état de validation amélioré avec couleurs distinctes */}
+                                  <div className="flex items-center space-x-2">
+                                    {validationDetails[app.appName] ? (
+                                      <div
+                                        className={`flex items-center ${
+                                          validationDetails[app.appName]!.level.startsWith(
+                                            'success'
+                                          )
+                                            ? 'text-emerald-500'
+                                            : validationDetails[app.appName]!.level.startsWith(
+                                                  'warning'
+                                                )
+                                              ? 'text-amber-500'
+                                              : 'text-rose-500'
+                                        }`}
+                                      >
+                                        {validationDetails[app.appName]!.level.startsWith(
+                                          'success'
+                                        ) && <CheckCircle className="h-5 w-5" />}
+                                        {validationDetails[app.appName]!.level.startsWith(
+                                          'warning'
+                                        ) && <AlertTriangle className="h-5 w-5" />}
+                                        {validationDetails[app.appName]!.level.startsWith(
+                                          'error'
+                                        ) && <XCircle className="h-5 w-5" />}
+                                      </div>
+                                    ) : validationResults[app.appName] === 'loading' ? (
+                                      <Loader className="animate-spin h-5 w-5 text-primary/80" />
+                                    ) : (
+                                      <div className="h-5 w-5" /> // Espace réservé vide pour maintenir l'alignement
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="mt-3">
+                                  <div
+                                    className={`p-3 backdrop-blur-sm border rounded-md flex justify-between items-center ${
+                                      validationResults[app.appName] === 'success'
+                                        ? 'bg-emerald-950/10 border-emerald-500/20'
+                                        : validationResults[app.appName] === 'warning'
+                                          ? 'bg-amber-950/10 border-amber-500/20'
+                                          : validationResults[app.appName] === 'error'
+                                            ? 'bg-rose-950/10 border-rose-500/20'
+                                            : 'bg-background/50 border-primary/15'
+                                    }`}
+                                  >
+                                    <textarea
+                                      className="text-sm break-all pr-2 bg-transparent w-full resize-none outline-none border-none focus:ring-0 font-mono text-foreground"
+                                      value={app.command}
+                                      onChange={e => {
+                                        // Mettre à jour la commande dans l'état
+                                        const newCommands = [...appCommands];
+                                        const commandIndex = newCommands.findIndex(
+                                          cmd => cmd.appName === app.appName
+                                        );
+                                        if (commandIndex >= 0) {
+                                          // S'assurer que tous les champs requis sont conservés
+                                          newCommands[commandIndex] = {
+                                            appName: app.appName,
+                                            icon: app.icon,
+                                            category: app.category,
+                                            description: app.description,
+                                            command: e.target.value,
+                                          };
+                                          setAppCommands(newCommands);
+
+                                          // Revalider la commande après modification
+                                          validateCommand(e.target.value, app.appName);
+                                        }
+                                      }}
+                                      rows={1}
+                                      style={{ height: 'auto', minHeight: '1.5rem' }}
+                                      onInput={e => {
+                                        const target = e.target as HTMLTextAreaElement;
+                                        target.style.height = 'auto';
+                                        target.style.height = `${target.scrollHeight}px`;
+                                      }}
+                                    />
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          // Régénérer la commande originale
+                                          generateCommandForApp(app.appName)
+                                            .then((originalCommand: string) => {
+                                              const newCommands = [...appCommands];
+                                              const commandIndex = newCommands.findIndex(
+                                                cmd => cmd.appName === app.appName
+                                              );
+                                              if (commandIndex >= 0) {
+                                                newCommands[commandIndex] = {
+                                                  appName: app.appName,
+                                                  icon: app.icon,
+                                                  category: app.category,
+                                                  description: app.description,
+                                                  command: originalCommand,
+                                                };
+                                                setAppCommands(newCommands);
+                                                validateCommand(originalCommand, app.appName);
+                                              }
+                                            })
+                                            .catch((err: Error) => {
+                                              console.error(
+                                                'Erreur lors de la régénération de la commande:',
+                                                err
+                                              );
+                                            });
+                                        }}
+                                        aria-label="Réinitialiser la commande"
+                                        title="Réinitialiser la commande"
+                                        className={`hover:bg-primary/10 ${
+                                          validationResults[app.appName] === 'success'
+                                            ? 'text-emerald-500/80 hover:text-emerald-500'
+                                            : validationResults[app.appName] === 'warning'
+                                              ? 'text-amber-500/80 hover:text-amber-500'
+                                              : validationResults[app.appName] === 'error'
+                                                ? 'text-rose-500/80 hover:text-rose-500'
+                                                : 'text-primary/70 hover:text-primary'
+                                        }`}
+                                      >
+                                        <RefreshCw className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => copyCommandToClipboard(app.command)}
+                                        aria-label="Copier la commande"
+                                        title="Copier la commande"
+                                        className={`hover:bg-primary/10 ${
+                                          validationResults[app.appName] === 'success'
+                                            ? 'text-emerald-500/80 hover:text-emerald-500'
+                                            : validationResults[app.appName] === 'warning'
+                                              ? 'text-amber-500/80 hover:text-amber-500'
+                                              : validationResults[app.appName] === 'error'
+                                                ? 'text-rose-500/80 hover:text-rose-500'
+                                                : 'text-primary/70 hover:text-primary'
+                                        }`}
+                                      >
+                                        <Copy className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Affichage du message d'aide contextuel selon le niveau de validation */}
+                                {validationDetails[app.appName] && (
+                                  <div
+                                    className={`mt-3 p-3 rounded-md backdrop-blur-sm border ${
+                                      validationDetails[app.appName]!.level.startsWith('success')
+                                        ? 'bg-emerald-950/10 border-emerald-500/20 text-emerald-400'
+                                        : validationDetails[app.appName]!.level.startsWith(
+                                              'warning'
+                                            )
+                                          ? 'bg-amber-950/10 border-amber-500/20 text-amber-400'
+                                          : validationDetails[app.appName]!.level.startsWith(
+                                                'error'
+                                              )
+                                            ? 'bg-rose-950/10 border-rose-500/20 text-rose-400'
+                                            : 'bg-background/50 border-primary/15 text-foreground'
+                                    }`}
+                                  >
+                                    <p className="text-sm">
+                                      {validationDetails[app.appName]!.message}
+                                    </p>
+                                    {validationDetails[app.appName]!.suggestion && (
+                                      <p className="text-sm mt-1">
+                                        <span className="font-medium">Suggestion:</span>{' '}
+                                        <span
+                                          className={
+                                            validationDetails[app.appName]!.level.startsWith(
+                                              'error'
+                                            )
+                                              ? 'text-rose-300'
+                                              : 'text-muted-foreground'
+                                          }
+                                        >
+                                          {validationDetails[app.appName]!.suggestion}
+                                        </span>
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             ))}
                           </div>
                           <p className="text-xs text-muted-foreground mt-2">
-                            Vous pouvez modifier les commandes en cliquant sur l&apos;icône de
-                            modification (✏️), puis vérifier leur validité avec l&apos;icône (⚠️).
+                            Vous pouvez copier ces commandes et les exécuter dans votre terminal.
                           </p>
                         </div>
                       )}
@@ -1333,192 +1471,10 @@ export default function Home() {
                 </div>
               </div>
             </div>
-
-            {/* Autres OS en version épurée */}
-            <div className="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-background/95 via-background/90 to-background/85 backdrop-blur-none group hover:shadow-lg transition-all duration-700 transform hover:scale-[1.01] hover:translate-y-[-2px] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-primary/3 before:via-primary/2 before:to-transparent before:opacity-40 before:z-[-1]">
-              <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
-              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-30 transition-opacity duration-700 group-hover:opacity-40"></div>
-              <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-tr from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent rounded-full blur-xl opacity-20 transition-opacity duration-700 group-hover:opacity-30"></div>
-              <div className="py-3 px-4 relative z-10 border-b border-primary/10 bg-gradient-to-r from-primary/5 via-primary/4 via-primary/3 via-primary/2 to-transparent flex items-center gap-2 shadow-sm">
-                <div className="p-2 rounded-full bg-primary/20 shadow-lg backdrop-blur-none transform transition-transform duration-700 ease-in-out group-hover:scale-105 icon-3d-metallic animated ring-1 ring-primary/30">
-                  <Computer className="h-6 w-6 text-primary" />
-                  <div className="reflective-effect"></div>
-                </div>
-                <h2 className="text-primary font-bold text-lg font-heading">
-                  Autres systèmes d&apos;exploitation
-                </h2>
-              </div>
-              <div className="p-4 relative z-10 bg-gradient-to-b from-transparent via-background/10 via-background/20 via-background/30 to-background/40">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Explorez d&apos;autres systèmes d&apos;exploitation pour vos besoins
-                  informatiques.
-                </p>
-                <div className="flex justify-evenly items-center py-12 px-6">
-                  {!isDetectedOS('macOS') && (
-                    <div className="relative">
-                      <div className="p-4 rounded-full bg-primary/15 backdrop-blur-none icon-3d-metallic icon-copper group cursor-pointer">
-                        <FaApple className="h-12 w-12 text-primary/80 icon-apple group-hover:opacity-0 transition-all duration-500" />
-                        <div className="reflective-effect group-hover:opacity-0 transition-all duration-500"></div>
-
-                        {/* Carte qui apparaît au survol */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 invisible opacity-0 scale-0 group-hover:visible group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 w-[220px] bg-[#000000] rounded-xl shadow-2xl border-2 border-[#444444]/70 p-4 z-50 pointer-events-none group-hover:pointer-events-auto">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 rounded-full bg-[#333333] shadow-[0_0_10px_rgba(255,255,255,0.15)]">
-                              <FaApple className="h-6 w-6 text-white" />
-                            </div>
-                            <h3 className="text-base font-semibold text-white">
-                              {osLinks.macOS.name}
-                            </h3>
-                          </div>
-                          <p className="text-xs text-white/90 mb-3">{osLinks.macOS.description}</p>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => openLink(osLinks.macOS.official)}
-                              className="flex-1 h-8 rounded-md bg-white/15 hover:bg-white/25 text-white text-xs border border-white/30 flex items-center justify-center z-[100]"
-                            >
-                              <ExternalLink className="h-3 w-3 mr-2" />
-                              Site officiel
-                            </button>
-                            <button
-                              onClick={() => openLink(osLinks.macOS.video)}
-                              className="h-8 w-8 rounded-md bg-white/15 hover:bg-white/25 text-white border border-white/30 flex items-center justify-center z-[100]"
-                            >
-                              <Play className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {!isDetectedOS('Windows') && (
-                    <div className="relative">
-                      <div className="p-4 rounded-full bg-[#0078d7]/20 backdrop-blur-none icon-3d-metallic icon-silver group cursor-pointer">
-                        <FaWindows className="h-12 w-12 text-[#0078d7] icon-windows group-hover:opacity-0 transition-all duration-500" />
-                        <div className="reflective-effect group-hover:opacity-0 transition-all duration-500"></div>
-
-                        {/* Carte qui apparaît au survol */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 invisible opacity-0 scale-0 group-hover:visible group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 w-[220px] bg-[#0078d7] rounded-xl shadow-2xl border-2 border-[#0063b1]/70 p-4 z-50 pointer-events-none group-hover:pointer-events-auto">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 rounded-full bg-[#0063b1] shadow-[0_0_10px_rgba(255,255,255,0.15)]">
-                              <FaWindows className="h-6 w-6 text-white" />
-                            </div>
-                            <h3 className="text-base font-semibold text-white">
-                              {osLinks.Windows.name}
-                            </h3>
-                          </div>
-                          <p className="text-xs text-white/90 mb-3">
-                            {osLinks.Windows.description}
-                          </p>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => openLink(osLinks.Windows.official)}
-                              className="flex-1 h-8 rounded-md bg-white/15 hover:bg-white/25 text-white text-xs border border-white/30 flex items-center justify-center z-[100]"
-                            >
-                              <ExternalLink className="h-3 w-3 mr-2" />
-                              Site officiel
-                            </button>
-                            <button
-                              onClick={() => openLink(osLinks.Windows.video)}
-                              className="h-8 w-8 rounded-md bg-white/15 hover:bg-white/25 text-white border border-white/30 flex items-center justify-center z-[100]"
-                            >
-                              <Play className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {!isDetectedOS('Linux') && (
-                    <div className="relative">
-                      <div className="p-4 rounded-full bg-primary/15 backdrop-blur-none icon-3d-metallic icon-gold group cursor-pointer">
-                        <FaLinux className="h-12 w-12 text-primary/80 icon-linux group-hover:opacity-0 transition-all duration-500" />
-                        <div className="reflective-effect group-hover:opacity-0 transition-all duration-500"></div>
-
-                        {/* Carte qui apparaît au survol */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 invisible opacity-0 scale-0 group-hover:visible group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 w-[220px] bg-[#e67e22] rounded-xl shadow-2xl border-2 border-[#d35400]/70 p-4 z-50 pointer-events-none group-hover:pointer-events-auto">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 rounded-full bg-[#d35400] shadow-[0_0_12px_rgba(255,255,255,0.2)]">
-                              <FaLinux className="h-6 w-6 text-white" />
-                            </div>
-                            <h3 className="text-base font-semibold text-white">
-                              {osLinks.Linux.name}
-                            </h3>
-                          </div>
-                          <p className="text-xs text-white/90 mb-3">{osLinks.Linux.description}</p>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => openLink(osLinks.Linux.official)}
-                              className="flex-1 h-8 rounded-md bg-white/15 hover:bg-white/25 text-white text-xs border border-white/30 flex items-center justify-center z-[100]"
-                            >
-                              <ExternalLink className="h-3 w-3 mr-2" />
-                              Site officiel
-                            </button>
-                            <button
-                              onClick={() => openLink(osLinks.Linux.video)}
-                              className="h-8 w-8 rounded-md bg-white/15 hover:bg-white/25 text-white border border-white/30 flex items-center justify-center z-[100]"
-                            >
-                              <Play className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
           </div>
         ) : (
-          <div className="relative overflow-hidden rounded-2xl backdrop-blur-sm border border-destructive/20 bg-destructive/5 shadow-lg">
-            <div className="absolute inset-0 bg-gradient-to-br from-destructive/10 to-transparent opacity-30"></div>
-            <div className="relative p-4 flex gap-3 items-start z-10">
-              <div className="bg-destructive/10 p-2 rounded-full">
-                <AlertCircle className="h-5 w-5 text-destructive" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-base text-destructive">Erreur de détection</h3>
-                <p className="text-sm mt-1">La fonction GetOSInfo n&apos;est pas disponible.</p>
-                <p className="text-sm mt-1">Redémarrez avec `wails dev`.</p>
-              </div>
-            </div>
-          </div>
+          <div>{/* ... existing code ... */}</div>
         )}
-
-        {/* Barre d'actions en bas avec effet glassmorphism */}
-        <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-r from-background/70 to-background/60 shadow-md">
-          <div className="absolute inset-0 bg-noise opacity-5 mix-blend-soft-light"></div>
-          <div className="relative z-10 py-3 px-4 flex justify-between items-center">
-            <Button
-              variant="default"
-              size="sm"
-              className="h-9 px-4 rounded-xl bg-primary/80 hover:bg-primary/90 backdrop-blur-sm shadow-md hover:shadow transform transition-all duration-300 hover:scale-[1.02] relative overflow-hidden group"
-              onClick={refreshSystemInfo}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  Chargement...
-                </>
-              ) : (
-                <>
-                  <div className="absolute inset-0 bg-gradient-to-tr from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <HardDrive className="h-4 w-4 mr-2 relative z-10" />
-                  <span className="relative z-10">Rafraîchir</span>
-                </>
-              )}
-            </Button>
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-full bg-primary/10">
-                <Info className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-sm font-medium">Diagnostique Système</span>
-            </div>
-          </div>
-        </div>
       </div>
     </main>
   );

@@ -12,6 +12,7 @@ export interface OSInfo {
   diskFree: string;
   diskTotal: string;
   osFullName: string;
+  platform: string;
 }
 
 export interface AppInstallCommand {
@@ -20,6 +21,29 @@ export interface AppInstallCommand {
   icon: string;
   category: string;
   description: string;
+}
+
+// Types pour le système de validation avancé
+export type ValidationLevel =
+  | 'success'
+  | 'success-with-options'
+  | 'warning-options'
+  | 'warning-syntax'
+  | 'error-name'
+  | 'error-manager'
+  | 'error-security'
+  | 'error-syntax'
+  | 'loading';
+
+// Type simplifié pour la compatibilité avec l'ancien système
+export type ValidationResult = 'success' | 'warning' | 'error' | 'loading' | null;
+
+// Informations détaillées sur la validation
+export interface ValidationDetails {
+  level: ValidationLevel;
+  message: string;
+  suggestion?: string;
+  explanation?: string;
 }
 
 export interface AppCategoryInfo {
